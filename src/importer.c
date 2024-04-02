@@ -10,33 +10,47 @@
 
 
 
-static metadata_item* getItem(const metadata_item* metadata, const char* key);
+static metadata_item*
+getItem(const metadata_item* metadata, const char* key);
 
-static int onlyTextChildren(const xmlNodePtr node);
+static int
+onlyTextChildren(const xmlNodePtr node);
 
-static metadata_item* insertAttr(const xmlAttrPtr attr, const xmlNodePtr next);
+static metadata_item*
+insertAttr(const xmlAttrPtr attr, const xmlNodePtr next);
 
-static metadata_item* loadxmlTree(const xmlNodePtr root);
+static metadata_item*
+loadxmlTree(const xmlNodePtr root);
 
-static void printMetadata(const metadata_item* metadata);
+static void
+printMetadata(const metadata_item* metadata);
 
-static void freeMetadata(metadata_item* metadata);
+static void
+freeMetadata(metadata_item* metadata);
 
-DopplerMeasurement* init_DopplerMeasurement();
+DopplerMeasurement*
+init_DopplerMeasurement();
 
-static DopplerMeasurement* metadataToDoppler(metadata_item* metadata,
-                                             const char* filename);
+static void
+spectrumStrToArr(char* spectrum, SingleSpectrum* s);
 
-void printDopplerMeasurement(const DopplerMeasurement* dm);
+static DopplerMeasurement*
+metadataToDoppler(metadata_item* metadata, const char* filename);
 
-DopplerMeasurement* import_n42(const char* filepath, const int verbose);
+void
+printDopplerMeasurement(const DopplerMeasurement* dm);
 
-void freeDopplerMeasurement(DopplerMeasurement* dm);
+DopplerMeasurement*
+import_n42(const char* filepath, const int verbose);
+
+void
+freeDopplerMeasurement(DopplerMeasurement* dm);
 
 
 
-static metadata_item* getItem(const metadata_item* metadata, const char* key) {
-
+static metadata_item*
+getItem(const metadata_item* metadata, const char* key)
+{
     if (metadata == NULL) {
         return NULL;
     } else if (metadata->children == NULL) {
@@ -51,11 +65,11 @@ static metadata_item* getItem(const metadata_item* metadata, const char* key) {
     }
 
     return NULL;
-
 }
 
-static int onlyTextChildren(const xmlNodePtr node) {
-
+static int
+onlyTextChildren(const xmlNodePtr node)
+{
     int textChildrenOnly = 1;
 
     for (xmlNodePtr child = node->children;
@@ -67,12 +81,11 @@ static int onlyTextChildren(const xmlNodePtr node) {
     }
 
     return textChildrenOnly;
-
 }
 
-static metadata_item* insertAttr(const xmlAttrPtr attr,
-                                 const xmlNodePtr next) {
-
+static metadata_item*
+insertAttr(const xmlAttrPtr attr, const xmlNodePtr next)
+{
     if (attr == NULL) {
         return NULL;
     }
@@ -95,11 +108,11 @@ static metadata_item* insertAttr(const xmlAttrPtr attr,
     }
 
     return metadata;
-
 }
 
-static metadata_item* loadxmlTree(const xmlNodePtr root) {
-
+static metadata_item*
+loadxmlTree(const xmlNodePtr root)
+{
     if (root == NULL) {
         return NULL;
     } else if (root->type == XML_TEXT_NODE) {
@@ -135,11 +148,11 @@ static metadata_item* loadxmlTree(const xmlNodePtr root) {
     metadata->next = loadxmlTree(root->next);
 
     return metadata;
-
 }
 
-static void printMetadata(const metadata_item* metadata) {
-
+static void
+printMetadata(const metadata_item* metadata)
+{
     if (metadata == NULL) {
         return;
     }
@@ -157,11 +170,11 @@ static void printMetadata(const metadata_item* metadata) {
     printMetadata(metadata->next);
 
     return;
-
 }
 
-static void freeMetadata(metadata_item* metadata) {
-
+static void
+freeMetadata(metadata_item* metadata)
+{
     if (metadata->key != NULL) {
         free(metadata->key);
     }
@@ -177,11 +190,11 @@ static void freeMetadata(metadata_item* metadata) {
     free(metadata);
 
     return;
-
 }
 
-DopplerMeasurement* init_DopplerMeasurement() {
-
+DopplerMeasurement*
+init_DopplerMeasurement()
+{
     DopplerMeasurement* dm = ((DopplerMeasurement*)
                               malloc(sizeof(DopplerMeasurement)));
 
@@ -211,16 +224,16 @@ DopplerMeasurement* init_DopplerMeasurement() {
     dm->n_coinc = 0;
 
     return dm;
-
 }
 
-static void spectrumStrToArr(char* spectrum, SingleSpectrum* s) {
-
+static void
+spectrumStrToArr(char* spectrum, SingleSpectrum* s)
+{
     if (spectrum == NULL) {
         return;
     }
 
-    s->spectrum_size = 0;
+    s->spectrum_size = -1;
 
     int length = strlen(spectrum);
     s->spectrum = (int*)malloc(length * sizeof(int));
@@ -232,35 +245,24 @@ static void spectrumStrToArr(char* spectrum, SingleSpectrum* s) {
 
     int number;
     char* ptr = spectrum;
-    int skip;
+    char* space = " ";
 
     while (sscanf(ptr, "%d", &number) == 1) {
-        s->spectrum[s->spectrum_size] = number;
-        s->spectrum_size++;
-        skip = 1;
-        if (number == 0) {
-            skip = 2;
-        } else {
-            while (number != 0) {
-                number /= 10;
-                skip++;
-            }
-        }
-        if (ptr + skip >= spectrum + length) {
-            break;
-        }
-        ptr += skip;
+        s->spectrum[s->spectrum_size++] = number;
+        do {
+            ptr++;
+        } while (*ptr != *space && *ptr);
     }
+    s->spectrum_size++;
 
     s->spectrum = (int*)realloc(s->spectrum, s->spectrum_size * sizeof(int));
 
     return;
-
 }
 
-static DopplerMeasurement* metadataToDoppler(metadata_item* metadata,
-                                             const char* filename) {
-
+static DopplerMeasurement*
+metadataToDoppler(metadata_item* metadata, const char* filename)
+{
     if (metadata == NULL) {
         return NULL;
     }
@@ -302,9 +304,11 @@ static DopplerMeasurement* metadataToDoppler(metadata_item* metadata,
                         attr != NULL; attr = attr->next) {
                     if (!strcmp(attr->key, "ChannelData")) {
                         spectrumStrToArr(attr->value, &(dm->singles[i]));
-                    } else if (!strcmp(attr->key, "radDetectorInformationReference")) {
+                    } else if (!strcmp(attr->key,
+                                "radDetectorInformationReference")) {
                         dm->singles[i].detname.ref = strdup(attr->value);
-                    } else if (!strcmp(attr->key, "energyCalibrationReference")) {
+                    } else if (!strcmp(attr->key,
+                                "energyCalibrationReference")) {
                         dm->singles[i].ecal.ref = strdup(attr->value);
                     }
                 }
@@ -315,23 +319,23 @@ static DopplerMeasurement* metadataToDoppler(metadata_item* metadata,
     }
 
     return dm;
-
 }
 
-void printDopplerMeasurement(const DopplerMeasurement* dm) {
-
+void
+printDopplerMeasurement(const DopplerMeasurement* dm)
+{
     if (dm->singles != NULL) {
         printf("Doppler Measurement %s:\n", dm->singles[0].filename);
         printf("DopplerMeasurement contains %d Single ", dm->n_singles);
         switch (dm->n_singles) {
             case 0:
-                puts("Spectra\n");
+                puts("Spectra");
                 break;
             case 1:
-                puts("Spectrum:\n");
+                puts("Spectrum:");
                 break;
             default:
-                puts("Spectra:\n");
+                puts("Spectra:");
                 break;
         }
         for (int i = 0; i < dm->n_singles; i++) {
@@ -356,11 +360,11 @@ void printDopplerMeasurement(const DopplerMeasurement* dm) {
     }
 
     return;
-
 }
 
-DopplerMeasurement* import_n42(const char* filepath, const int verbose) {
-
+DopplerMeasurement*
+import_n42(const char* filepath, const int verbose)
+{
 	xmlDocPtr doc = xmlParseFile(filepath);
 
 	if (doc == NULL) {
@@ -386,11 +390,11 @@ DopplerMeasurement* import_n42(const char* filepath, const int verbose) {
     }
 
     return dm;
-
 }
 
-void freeDopplerMeasurement(DopplerMeasurement* dm) {
-
+void
+freeDopplerMeasurement(DopplerMeasurement* dm)
+{
     if (dm != NULL) {
         if (dm->metadata != NULL) {
             freeMetadata(dm->metadata);
@@ -422,13 +426,13 @@ void freeDopplerMeasurement(DopplerMeasurement* dm) {
     }
 
     return;
-
 }
 
 
 
-int main(int argc, char** argv) {
-
+int
+main(int argc, char** argv)
+{
    int verbose = 0;
 
     if (argc > 1) {
@@ -454,6 +458,5 @@ int main(int argc, char** argv) {
     printf("CPU time used: %f ms\n", cpu_time);
 
     return 0;
-
 }
 
