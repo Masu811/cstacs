@@ -5,48 +5,10 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <png.h>
 
+#include "importer.h"
 #include "structs.h"
-
-
-
-static metadata_item*
-getItem(const metadata_item* metadata, const char* key);
-
-static int
-onlyTextChildren(const xmlNodePtr node);
-
-static metadata_item*
-insertAttr(const xmlAttrPtr attr, const xmlNodePtr next);
-
-static metadata_item*
-loadxmlTree(const xmlNodePtr root);
-
-static void
-printMetadata(const metadata_item* metadata);
-
-static void
-freeMetadata(metadata_item* metadata);
-
-DopplerMeasurement*
-init_DopplerMeasurement();
-
-static void
-spectrumStrToArr(char* spectrum, SingleSpectrum* s);
-
-static DopplerMeasurement*
-metadataToDoppler(metadata_item* metadata, const char* filename);
-
-void
-printDopplerMeasurement(const DopplerMeasurement* dm);
-
-DopplerMeasurement*
-import_n42(const char* filepath, const int verbose);
-
-void
-freeDopplerMeasurement(DopplerMeasurement* dm);
-
-
 
 static metadata_item*
 getItem(const metadata_item* metadata, const char* key)
@@ -70,6 +32,10 @@ getItem(const metadata_item* metadata, const char* key)
 static int
 onlyTextChildren(const xmlNodePtr node)
 {
+    if (node->children == NULL) {
+        return 0;
+    }
+
     int textChildrenOnly = 1;
 
     for (xmlNodePtr child = node->children;
@@ -132,17 +98,18 @@ loadxmlTree(const xmlNodePtr root)
         metadata->key = NULL;
     }
 
-    metadata->value = NULL;
-
     if (root->properties != NULL) {
         metadata->children = insertAttr(root->properties, root->children);
     } else if (root->children == NULL) {
         metadata->children = NULL;
-    } else if (onlyTextChildren(root)){
-        metadata->children = NULL;
-        metadata->value = strdup(root->children->content);
     } else {
         metadata->children = loadxmlTree(root->children);
+    }
+
+    metadata->value = NULL;
+
+    if (onlyTextChildren(root)){
+        metadata->value = strdup(root->children->content);
     }
 
     metadata->next = loadxmlTree(root->next);
@@ -165,9 +132,10 @@ printMetadata(const metadata_item* metadata)
         puts("");
     }
 
-    printMetadata(metadata->children);
-
-    printMetadata(metadata->next);
+    for (metadata_item* child = metadata->children;
+            child != NULL; child = child->next) {
+        printMetadata(child);
+    }
 
     return;
 }
@@ -192,40 +160,6 @@ freeMetadata(metadata_item* metadata)
     return;
 }
 
-DopplerMeasurement*
-init_DopplerMeasurement()
-{
-    DopplerMeasurement* dm = ((DopplerMeasurement*)
-                              malloc(sizeof(DopplerMeasurement)));
-
-    if (dm == NULL) {
-        puts("Memory allocation for DopplerMeasurement failed");
-        return NULL;
-    }
-
-    dm->singles = (SingleSpectrum*)malloc(sizeof(SingleSpectrum));
-
-    if (dm->singles == NULL) {
-        puts("Memory allocation for SingleSpectrum failed");
-        free(dm);
-        return NULL;
-    }
-
-    dm->coinc = (CoincidenceSpectrum*)malloc(sizeof(CoincidenceSpectrum));
-
-    if (dm->coinc == NULL) {
-        puts("Memory allocation for CoincidenceSpectrum failed");
-        free(dm->singles);
-        free(dm);
-        return NULL;
-    }
-
-    dm->n_singles = 0;
-    dm->n_coinc = 0;
-
-    return dm;
-}
-
 static void
 spectrumStrToArr(char* spectrum, SingleSpectrum* s)
 {
@@ -233,7 +167,7 @@ spectrumStrToArr(char* spectrum, SingleSpectrum* s)
         return;
     }
 
-    s->spectrum_size = -1;
+    s->spectrum_size = 0;
 
     int length = strlen(spectrum);
     s->spectrum = (int*)malloc(length * sizeof(int));
@@ -253,9 +187,92 @@ spectrumStrToArr(char* spectrum, SingleSpectrum* s)
             ptr++;
         } while (*ptr != *space && *ptr);
     }
-    s->spectrum_size++;
 
     s->spectrum = (int*)realloc(s->spectrum, s->spectrum_size * sizeof(int));
+
+    return;
+}
+
+static void
+import_png(char* filename, CoincidenceSpectrum* coinc)
+{
+    printf("Importing png file %s...\n", filename);
+    int width, height;
+    png_byte color_type;
+    png_byte bit_depth;
+    png_bytep *row_pointers = NULL;
+    FILE *fp = fopen(filename, "rb");
+
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING,
+                                             NULL, NULL, NULL);
+    if(!png) abort();
+
+    png_infop info = png_create_info_struct(png);
+    if(!info) abort();
+
+    if(setjmp(png_jmpbuf(png))) abort();
+
+    png_init_io(png, fp);
+
+    png_read_info(png, info);
+
+    width      = png_get_image_width(png, info);
+    height     = png_get_image_height(png, info);
+    color_type = png_get_color_type(png, info);
+    bit_depth  = png_get_bit_depth(png, info);
+
+    // Read any color_type into 8bit depth, RGBA format.
+    // See http://www.libpng.org/pub/png/libpng-manual.txt
+
+    if(bit_depth == 16)
+        png_set_strip_16(png);
+
+    if(color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_palette_to_rgb(png);
+
+    // PNG_COLOR_TYPE_GRAY_ALPHA is always 8 or 16bit depth.
+    if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+        png_set_expand_gray_1_2_4_to_8(png);
+
+    if(png_get_valid(png, info, PNG_INFO_tRNS))
+        png_set_tRNS_to_alpha(png);
+
+    // These color_type don't have an alpha channel then fill it with 0xff.
+    if(color_type == PNG_COLOR_TYPE_RGB ||
+            color_type == PNG_COLOR_TYPE_GRAY ||
+            color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_filler(png, 0xFF, PNG_FILLER_AFTER);
+
+    if(color_type == PNG_COLOR_TYPE_GRAY ||
+            color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+        png_set_gray_to_rgb(png);
+
+    png_read_update_info(png, info);
+
+    if (row_pointers) abort();
+
+    row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+    for(int y = 0; y < height; y++) {
+        row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
+    }
+
+    png_read_image(png, row_pointers);
+
+    fclose(fp);
+
+    png_destroy_read_struct(&png, &info, NULL);
+
+    coinc->spectrum = (int*)malloc(sizeof(int) * width * height);
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            png_byte* ptr = &(row_pointers[y][x * 3]);
+            int value = ptr[0] | (ptr[1] << 8) | (ptr[2] << 16);
+            coinc->spectrum[y * width + x] = value;
+        }
+    }
+
+    coinc->width = width;
+    coinc->height = height;
 
     return;
 }
@@ -267,12 +284,15 @@ metadataToDoppler(metadata_item* metadata, const char* filename)
         return NULL;
     }
 
-    DopplerMeasurement* dm = init_DopplerMeasurement();
+    DopplerMeasurement* dm = ((DopplerMeasurement*)
+                              calloc(1, sizeof(DopplerMeasurement)));
 
     if (dm == NULL) {
         return NULL;
     }
 
+    dm->n_singles = 0;
+    dm->n_coinc = 0;
     dm->metadata = metadata;
 
     metadata_item* data = getItem(metadata, "RadMeasurement");
@@ -288,32 +308,57 @@ metadataToDoppler(metadata_item* metadata, const char* filename)
             metadata_item* id = getItem(entry, "id");
             if (strstr(id->value, "Coinc") == NULL) {
                 int i = dm->n_singles;
-                if (i > 0) {
-                    void* new_singles = realloc(dm->singles,
-                                            (i + 1) * sizeof(SingleSpectrum));
-                    if (new_singles == NULL) {
-                        printf("%s: Could not extend SingleSpectrum array\n",
-                               filename);
-                        continue;
-                    }
-                    dm->singles = (SingleSpectrum*)new_singles;
+                SingleSpectrum* new_single = ((SingleSpectrum*)
+                                              calloc(1,
+                                                     sizeof(SingleSpectrum)));
+                if (new_single == NULL) {
+                    printf("%s: Could not create new SingleSpectrum\n",
+                           filename);
+                    continue;
                 }
+                dm->singles = ((SingleSpectrum**)
+                               realloc(dm->singles,
+                                       (i + 1) * sizeof(SingleSpectrum*)));
+                dm->singles[i] = new_single;
                 dm->n_singles++;
-                dm->singles[i].filename = strdup(filename);
+                dm->singles[i]->filename = strdup(filename);
                 for (metadata_item* attr = entry->children;
                         attr != NULL; attr = attr->next) {
                     if (!strcmp(attr->key, "ChannelData")) {
-                        spectrumStrToArr(attr->value, &(dm->singles[i]));
+                        spectrumStrToArr(attr->value, dm->singles[i]);
                     } else if (!strcmp(attr->key,
                                 "radDetectorInformationReference")) {
-                        dm->singles[i].detname.ref = strdup(attr->value);
+                        dm->singles[i]->detname.ref = strdup(attr->value);
                     } else if (!strcmp(attr->key,
                                 "energyCalibrationReference")) {
-                        dm->singles[i].ecal.ref = strdup(attr->value);
+                        dm->singles[i]->ecal.ref = strdup(attr->value);
                     }
                 }
             } else {
-                // TODO
+                int i = dm->n_coinc;
+                CoincidenceSpectrum* new_coinc = ((CoincidenceSpectrum*)
+                                                  calloc(1,
+                                                         sizeof(CoincidenceSpectrum)));
+                if (new_coinc == NULL) {
+                    printf("%s: Could not create new CoincidenceSpectrum\n",
+                           filename);
+                    continue;
+                }
+                dm->coinc = ((CoincidenceSpectrum**)
+                               realloc(dm->coinc,
+                                       (i + 1) * sizeof(CoincidenceSpectrum*)));
+                dm->coinc[i] = new_coinc;
+                dm->n_coinc++;
+                dm->coinc[i]->parentname = strdup(filename);
+                dm->coinc[i]->filename = strdup(entry->value);
+                import_png(dm->coinc[i]->filename, dm->coinc[i]);
+                for (metadata_item* attr = entry->children;
+                        attr != NULL; attr = attr->next) {
+                    if (!strcmp(attr->key,
+                                "radDetectorInformationReference")) {
+                        dm->coinc[i]->detpair.ref = strdup(attr->value);
+                    }
+                }
             }
         }
     }
@@ -325,8 +370,8 @@ void
 printDopplerMeasurement(const DopplerMeasurement* dm)
 {
     if (dm->singles != NULL) {
-        printf("Doppler Measurement %s:\n", dm->singles[0].filename);
-        printf("DopplerMeasurement contains %d Single ", dm->n_singles);
+        printf("Doppler Measurement %s:\n", (*dm->singles)[0].filename);
+        printf("\tDopplerMeasurement contains %d Single ", dm->n_singles);
         switch (dm->n_singles) {
             case 0:
                 puts("Spectra");
@@ -339,23 +384,26 @@ printDopplerMeasurement(const DopplerMeasurement* dm)
                 break;
         }
         for (int i = 0; i < dm->n_singles; i++) {
-            int l = dm->singles[i].spectrum_size;
-            printf("Spectrum %d (length %d):", i, l);
-            for (int j = 0; j < l; j++) {
-                printf(" %d", dm->singles[i].spectrum[j]);
-            }
-            puts("");
-            printf("Filename: %s\n", dm->singles[i].filename);
-            printf("Detector: %s\n", dm->singles[i].detname.ref);
-            printf("Ecal: %s\n", dm->singles[i].ecal.ref);
+            printf("\t\tSpectrum %d:\n", i);
+            printf("\t\t\tChannels: %d\n", dm->singles[i]->spectrum_size);
+            printf("\t\t\tCounts: %lu\n", dm->singles[i]->counts);
+            printf("\t\t\tFilename: %s\n", dm->singles[i]->filename);
+            printf("\t\t\tDetector: %s\n", dm->singles[i]->detname.ref);
+            printf("\t\t\tEcal: %s\n", dm->singles[i]->ecal.ref);
         }
     }
 
     if (dm->coinc != NULL) {
-        printf("Doppler Measurement contains %d Coincidence Spectra:\n",
+        printf("\tDoppler Measurement contains %d Coincidence Spectra:\n",
                dm->n_coinc);
         for (int i = 0; i < dm->n_coinc; i++) {
-            printf("%s", dm->coinc[0].filename);
+            printf("\t\tSpectrum %d:\n", i);
+            printf("\t\t\tWidth (Detector 1 Channels): %d\n", dm->coinc[i]->width);
+            printf("\t\t\tHeight (Detector 2 Channels): %d\n", dm->coinc[i]->height);
+            printf("\t\t\tCounts: %lu\n", dm->coinc[i]->counts);
+            printf("\t\t\tFilename: %s\n", dm->coinc[i]->filename);
+            printf("\t\t\tParentname: %s\n", dm->coinc[i]->parentname);
+            printf("\t\t\tDetectorpair: %s\n", dm->coinc[i]->detpair.ref);
         }
     }
 
@@ -380,13 +428,19 @@ import_n42(const char* filepath, const int verbose)
     xmlCleanupParser();
 
     if (verbose) {
+        printf("\n%s:\n", filepath);
+        puts("Extracted the following metadata:\n");
         printMetadata(metadata);
+        printf("\n%s: End of metadata\n\n", filepath);
     }
 
     DopplerMeasurement* dm = metadataToDoppler(metadata, filepath);
 
     if (verbose) {
+        printf("\n%s:\n", filepath);
+        puts("Assembled the following DopplerMeasurement:\n");
         printDopplerMeasurement(dm);
+        printf("\n%s: End of DopplerMeasurement\n\n", filepath);
     }
 
     return dm;
@@ -401,24 +455,41 @@ freeDopplerMeasurement(DopplerMeasurement* dm)
         }
         if (dm->singles != NULL) {
             for (int i = 0; i < dm->n_singles; i++) {
-                if (dm->singles[i].spectrum != NULL) {
-                    free(dm->singles[i].spectrum);
+                if (dm->singles[i]->spectrum != NULL) {
+                    free(dm->singles[i]->spectrum);
                 }
-                if (dm->singles[i].filename != NULL) {
-                    free(dm->singles[i].filename);
+                if (dm->singles[i]->filename != NULL) {
+                    free(dm->singles[i]->filename);
                 }
-                if (dm->singles[i].detname.ref != NULL) {
-                    free(dm->singles[i].detname.ref);
+                if (dm->singles[i]->detname.ref != NULL) {
+                    free(dm->singles[i]->detname.ref);
                 }
-                if (dm->singles[i].ecal.ref != NULL) {
-                    free(dm->singles[i].ecal.ref);
+                if (dm->singles[i]->ecal.ref != NULL) {
+                    free(dm->singles[i]->ecal.ref);
+                }
+                if (dm->singles[i] != NULL) {
+                    free(dm->singles[i]);
                 }
             }
             free(dm->singles);
         }
         if (dm->coinc != NULL) {
             for (int i = 0; i < dm->n_coinc; i++) {
-                free(dm->coinc[i].spectrum);
+                if (dm->coinc[i]->spectrum != NULL) {
+                    free(dm->coinc[i]->spectrum);
+                }
+                if (dm->coinc[i]->filename != NULL) {
+                    free(dm->coinc[i]->filename);
+                }
+                if (dm->coinc[i]->parentname != NULL) {
+                    free(dm->coinc[i]->parentname);
+                }
+                if (dm->coinc[i]->detpair.ref != NULL) {
+                    free(dm->coinc[i]->detpair.ref);
+                }
+                if (dm->coinc[i] != NULL) {
+                    free(dm->coinc[i]);
+                }
             }
             free(dm->coinc);
         }

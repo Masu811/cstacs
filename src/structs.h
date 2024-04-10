@@ -36,9 +36,11 @@ typedef struct SingleSpectrum {
 } SingleSpectrum;
 
 typedef struct CoincidenceSpectrum {
-    int** spectrum;
-    int* spectrum_size;
+    int* spectrum;
+    int width;
+    int height;
     char* filename;
+    char* parentname;
     union {
         char* ref;
         char* name;
@@ -58,9 +60,9 @@ typedef struct CoincidenceSpectrum {
 
 typedef struct DopplerMeasurement {
     char* filename;
-    SingleSpectrum* singles;
+    SingleSpectrum** singles;
     int n_singles;
-    CoincidenceSpectrum* coinc;
+    CoincidenceSpectrum** coinc;
     int n_coinc;
     metadata_item* metadata;
 } DopplerMeasurement;

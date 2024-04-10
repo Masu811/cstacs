@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -g $(shell xml2-config --cflags)
-LIBS = $(shell xml2-config --libs)
+LIBS = $(shell xml2-config --libs) -lpng
 
 SRCS = importer.c
 TARGET = importer
