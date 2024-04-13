@@ -1,6 +1,8 @@
 #ifndef IMPORTER_H
 #define IMPORTER_H
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 #include "structs.h"
 
 static metadata_item*
@@ -28,13 +30,14 @@ static void
 import_png(char* filename, CoincidenceSpectrum* coinc);
 
 static DopplerMeasurement*
-metadataToDoppler(metadata_item* metadata, const char* filename);
+metadataToDoppler(metadata_item* metadata, const char* directory,
+                  const char* filename);
 
 void
 printDopplerMeasurement(const DopplerMeasurement* dm);
 
 DopplerMeasurement*
-import_n42(const char* filepath, const int verbose);
+import_n42(const char* directory, const char* filepath, const int verbose);
 
 void
 freeDopplerMeasurement(DopplerMeasurement* dm);

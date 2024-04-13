@@ -196,7 +196,6 @@ spectrumStrToArr(char* spectrum, SingleSpectrum* s)
 static void
 import_png(char* filename, CoincidenceSpectrum* coinc)
 {
-    printf("Importing png file %s...\n", filename);
     int width, height;
     png_byte color_type;
     png_byte bit_depth;
@@ -221,31 +220,12 @@ import_png(char* filename, CoincidenceSpectrum* coinc)
     color_type = png_get_color_type(png, info);
     bit_depth  = png_get_bit_depth(png, info);
 
-    // Read any color_type into 8bit depth, RGBA format.
-    // See http://www.libpng.org/pub/png/libpng-manual.txt
-
-    if(bit_depth == 16)
-        png_set_strip_16(png);
-
-    if(color_type == PNG_COLOR_TYPE_PALETTE)
-        png_set_palette_to_rgb(png);
-
-    // PNG_COLOR_TYPE_GRAY_ALPHA is always 8 or 16bit depth.
-    if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-        png_set_expand_gray_1_2_4_to_8(png);
-
-    if(png_get_valid(png, info, PNG_INFO_tRNS))
-        png_set_tRNS_to_alpha(png);
-
-    // These color_type don't have an alpha channel then fill it with 0xff.
-    if(color_type == PNG_COLOR_TYPE_RGB ||
-            color_type == PNG_COLOR_TYPE_GRAY ||
-            color_type == PNG_COLOR_TYPE_PALETTE)
-        png_set_filler(png, 0xFF, PNG_FILLER_AFTER);
-
-    if(color_type == PNG_COLOR_TYPE_GRAY ||
-            color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-        png_set_gray_to_rgb(png);
+    if (color_type != PNG_COLOR_TYPE_RGB) {
+        puts("Currently only RGB PNG evaluation is implemented");
+        fclose(fp);
+        png_destroy_read_struct(&png, &info, NULL);
+        return;
+    }
 
     png_read_update_info(png, info);
 
@@ -271,6 +251,11 @@ import_png(char* filename, CoincidenceSpectrum* coinc)
         }
     }
 
+    for(int y = 0; y < height; y++) {
+        free(row_pointers[y]);
+    }
+    free(row_pointers);
+
     coinc->width = width;
     coinc->height = height;
 
@@ -278,7 +263,8 @@ import_png(char* filename, CoincidenceSpectrum* coinc)
 }
 
 static DopplerMeasurement*
-metadataToDoppler(metadata_item* metadata, const char* filename)
+metadataToDoppler(metadata_item* metadata, const char* directory,
+                  const char* filename)
 {
     if (metadata == NULL) {
         return NULL;
@@ -350,8 +336,12 @@ metadataToDoppler(metadata_item* metadata, const char* filename)
                 dm->coinc[i] = new_coinc;
                 dm->n_coinc++;
                 dm->coinc[i]->parentname = strdup(filename);
-                dm->coinc[i]->filename = strdup(entry->value);
-                import_png(dm->coinc[i]->filename, dm->coinc[i]);
+                int l = strlen(directory) + strlen(entry->value) + 1;
+                char* filepath = (char*)malloc(l);
+                snprintf(filepath, l, "%s%s", directory, entry->value);
+                dm->coinc[i]->filename = strdup(filepath);
+                import_png(filepath, dm->coinc[i]);
+                free(filepath);
                 for (metadata_item* attr = entry->children;
                         attr != NULL; attr = attr->next) {
                     if (!strcmp(attr->key,
@@ -386,24 +376,34 @@ printDopplerMeasurement(const DopplerMeasurement* dm)
         for (int i = 0; i < dm->n_singles; i++) {
             printf("\t\tSpectrum %d:\n", i);
             printf("\t\t\tChannels: %d\n", dm->singles[i]->spectrum_size);
-            printf("\t\t\tCounts: %lu\n", dm->singles[i]->counts);
             printf("\t\t\tFilename: %s\n", dm->singles[i]->filename);
             printf("\t\t\tDetector: %s\n", dm->singles[i]->detname.ref);
             printf("\t\t\tEcal: %s\n", dm->singles[i]->ecal.ref);
+            printf("\t\t\tCounts: %lu\n", dm->singles[i]->counts);
         }
     }
 
     if (dm->coinc != NULL) {
-        printf("\tDoppler Measurement contains %d Coincidence Spectra:\n",
-               dm->n_coinc);
+        printf("\tDoppler Measurement contains %d Coincidence ", dm->n_coinc);
+        switch (dm->n_singles) {
+            case 0:
+                puts("Spectra");
+                break;
+            case 1:
+                puts("Spectrum:");
+                break;
+            default:
+                puts("Spectra:");
+                break;
+        }
         for (int i = 0; i < dm->n_coinc; i++) {
             printf("\t\tSpectrum %d:\n", i);
             printf("\t\t\tWidth (Detector 1 Channels): %d\n", dm->coinc[i]->width);
             printf("\t\t\tHeight (Detector 2 Channels): %d\n", dm->coinc[i]->height);
-            printf("\t\t\tCounts: %lu\n", dm->coinc[i]->counts);
             printf("\t\t\tFilename: %s\n", dm->coinc[i]->filename);
             printf("\t\t\tParentname: %s\n", dm->coinc[i]->parentname);
             printf("\t\t\tDetectorpair: %s\n", dm->coinc[i]->detpair.ref);
+            printf("\t\t\tCounts: %lu\n", dm->coinc[i]->counts);
         }
     }
 
@@ -411,8 +411,11 @@ printDopplerMeasurement(const DopplerMeasurement* dm)
 }
 
 DopplerMeasurement*
-import_n42(const char* filepath, const int verbose)
+import_n42(const char* directory, const char* filename, const int verbose)
 {
+    int l = strlen(directory) + strlen(filename) + 1;
+    char* filepath = (char*)malloc(l);
+    snprintf(filepath, l, "%s%s", directory, filename);
 	xmlDocPtr doc = xmlParseFile(filepath);
 
 	if (doc == NULL) {
@@ -426,21 +429,20 @@ import_n42(const char* filepath, const int verbose)
 
     xmlFreeDoc(doc);
     xmlCleanupParser();
-
+    /*
     if (verbose) {
         printf("\n%s:\n", filepath);
-        puts("Extracted the following metadata:\n");
+        printf("\n%s: Extracted the following metadata:\n", filepath);
         printMetadata(metadata);
         printf("\n%s: End of metadata\n\n", filepath);
     }
+    */
+    DopplerMeasurement* dm = metadataToDoppler(metadata, directory, filepath);
 
-    DopplerMeasurement* dm = metadataToDoppler(metadata, filepath);
+    free(filepath);
 
     if (verbose) {
-        printf("\n%s:\n", filepath);
-        puts("Assembled the following DopplerMeasurement:\n");
         printDopplerMeasurement(dm);
-        printf("\n%s: End of DopplerMeasurement\n\n", filepath);
     }
 
     return dm;
@@ -500,7 +502,7 @@ freeDopplerMeasurement(DopplerMeasurement* dm)
 }
 
 
-
+/*
 int
 main(int argc, char** argv)
 {
@@ -517,9 +519,9 @@ main(int argc, char** argv)
     double cpu_time;
 
     start = clock();
-    char* filepath = ("./example.n42");
+    char* filepath = ("example.n42");
 
-    DopplerMeasurement* dm = import_n42(filepath, verbose);
+    DopplerMeasurement* dm = import_n42("./", filepath, verbose);
 
     freeDopplerMeasurement(dm);
 
@@ -530,4 +532,4 @@ main(int argc, char** argv)
 
     return 0;
 }
-
+*/
