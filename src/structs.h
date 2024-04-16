@@ -20,10 +20,10 @@ typedef struct SingleSpectrum {
     } detname;
     union {
         char* ref;
-        float values[2];
+        char* values;
     } ecal;
     float eres;
-    unsigned long counts;
+    long long counts;
     float dcounts;
     float s;
     float ds;
@@ -31,7 +31,7 @@ typedef struct SingleSpectrum {
     float dw;
     float v2p;
     float dv2p;
-    unsigned long peak_counts;
+    long long peak_counts;
     float dpeak_counts;
 } SingleSpectrum;
 
@@ -48,13 +48,13 @@ typedef struct CoincidenceSpectrum {
     int* window;
     float coinc_time;
     float eres;
-    unsigned long counts;
+    long long counts;
     float dcounts;
     float s;
     float ds;
     float w;
     float dw;
-    unsigned long peak_counts;
+    long long peak_counts;
     float dpeak_counts;
 } CoincidenceSpectrum;
 

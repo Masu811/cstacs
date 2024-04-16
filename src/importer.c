@@ -10,6 +10,10 @@
 #include "importer.h"
 #include "structs.h"
 
+/*
+ * Get the first child of metadata item 'metadata' whose key equals 'key'.
+ * If found, return the metadata_item* to that child, else return NULL.
+ */
 static metadata_item*
 getItem(const metadata_item* metadata, const char* key)
 {
@@ -29,6 +33,10 @@ getItem(const metadata_item* metadata, const char* key)
     return NULL;
 }
 
+/*
+ * Check if xmlNode '*node' has only children of type XML_TEXT_NODE.
+ * If so, return 1, else return 0.
+ */
 static int
 onlyTextChildren(const xmlNodePtr node)
 {
@@ -49,6 +57,11 @@ onlyTextChildren(const xmlNodePtr node)
     return textChildrenOnly;
 }
 
+/*
+ * Insert xml attribute nodes as metadata item in front of 'next'.
+ * Create linked list of metadata items representing the attribute nodes.
+ * 'next' will be the next of the last attribute.
+ */
 static metadata_item*
 insertAttr(const xmlAttrPtr attr, const xmlNodePtr next)
 {
@@ -63,8 +76,8 @@ insertAttr(const xmlAttrPtr attr, const xmlNodePtr next)
         return NULL;
     }
 
-    metadata->key = strdup(attr->name);
-    metadata->value = strdup(attr->children->content);
+    metadata->key = strdup((char*)attr->name);
+    metadata->value = strdup((char*)attr->children->content);
     metadata->children = NULL;
 
     if (attr->next == NULL) {
@@ -76,6 +89,9 @@ insertAttr(const xmlAttrPtr attr, const xmlNodePtr next)
     return metadata;
 }
 
+/*
+ * Recreate the xml tree branching off of 'root' as metadata item linked list.
+ */
 static metadata_item*
 loadxmlTree(const xmlNodePtr root)
 {
@@ -93,7 +109,7 @@ loadxmlTree(const xmlNodePtr root)
     }
 
     if (root->name != NULL) {
-        metadata->key = strdup(root->name);
+        metadata->key = strdup((char*)root->name);
     } else {
         metadata->key = NULL;
     }
@@ -109,7 +125,7 @@ loadxmlTree(const xmlNodePtr root)
     metadata->value = NULL;
 
     if (onlyTextChildren(root)){
-        metadata->value = strdup(root->children->content);
+        metadata->value = strdup((char*)root->children->content);
     }
 
     metadata->next = loadxmlTree(root->next);
@@ -117,6 +133,9 @@ loadxmlTree(const xmlNodePtr root)
     return metadata;
 }
 
+/*
+ * Traverse the metadata tree 'metadata' and print keys and values.
+ */
 static void
 printMetadata(const metadata_item* metadata)
 {
@@ -160,6 +179,10 @@ freeMetadata(metadata_item* metadata)
     return;
 }
 
+/*
+ * Load char* 'spectrum' into int array 's->spectrum'.
+ * 'spectrum' is expected to be a string of ints separated by spaces.
+ */
 static void
 spectrumStrToArr(char* spectrum, SingleSpectrum* s)
 {
@@ -193,6 +216,9 @@ spectrumStrToArr(char* spectrum, SingleSpectrum* s)
     return;
 }
 
+/*
+ * Load png file 'filename' into int array 'coinc->spectrum'.
+ */
 static void
 import_png(char* filename, CoincidenceSpectrum* coinc)
 {
@@ -262,6 +288,22 @@ import_png(char* filename, CoincidenceSpectrum* coinc)
     return;
 }
 
+/* 
+ * Concatenate 'directory' and 'filename'.
+ * 'directory' must end in '/'.
+ * The user is responsible for freeing the returned char*.
+ */
+char*
+concatPath(const char* directory, const char* filename)
+{
+    int l = strlen(directory) + strlen(filename) + 1;
+    char* filepath = (char*)malloc(l);
+    snprintf(filepath, l, "%s%s", directory, filename);
+
+    return filepath;
+}
+
+/* Assemble DopplerMeasurement from metadata. */
 static DopplerMeasurement*
 metadataToDoppler(metadata_item* metadata, const char* directory,
                   const char* filename)
@@ -323,22 +365,19 @@ metadataToDoppler(metadata_item* metadata, const char* directory,
             } else {
                 int i = dm->n_coinc;
                 CoincidenceSpectrum* new_coinc = ((CoincidenceSpectrum*)
-                                                  calloc(1,
-                                                         sizeof(CoincidenceSpectrum)));
+                        calloc(1, sizeof(CoincidenceSpectrum)));
                 if (new_coinc == NULL) {
                     printf("%s: Could not create new CoincidenceSpectrum\n",
                            filename);
                     continue;
                 }
                 dm->coinc = ((CoincidenceSpectrum**)
-                               realloc(dm->coinc,
-                                       (i + 1) * sizeof(CoincidenceSpectrum*)));
+                             realloc(dm->coinc,
+                                     (i + 1) * sizeof(CoincidenceSpectrum*)));
                 dm->coinc[i] = new_coinc;
                 dm->n_coinc++;
                 dm->coinc[i]->parentname = strdup(filename);
-                int l = strlen(directory) + strlen(entry->value) + 1;
-                char* filepath = (char*)malloc(l);
-                snprintf(filepath, l, "%s%s", directory, entry->value);
+                char* filepath = concatPath(directory, entry->value);
                 dm->coinc[i]->filename = strdup(filepath);
                 import_png(filepath, dm->coinc[i]);
                 free(filepath);
@@ -353,6 +392,37 @@ metadataToDoppler(metadata_item* metadata, const char* directory,
         }
     }
 
+    // resolve references
+
+    for (int i = 0; i < dm->n_singles; i++) {
+        for (metadata_item* entry = metadata->children;
+                entry != NULL; entry = entry->next) {
+            if (!strcmp(entry->key, "RadDetectorInformation")) {
+                metadata_item* id = getItem(entry, "id");
+                if (id == NULL) {
+                    continue;
+                }
+                if (strcmp(id->value, dm->singles[i]->detname.ref)) {
+                    continue;
+                }
+                metadata_item* name = getItem(entry, "RadDetectorName");
+                free(dm->singles[i]->detname.ref);
+                dm->singles[i]->detname.name = strdup(name->value);
+            } else if (!strcmp(entry->key, "EnergyCalibration")) {
+                metadata_item* id = getItem(entry, "id");
+                if (id == NULL) {
+                    continue;
+                }
+                if (strcmp(id->value, dm->singles[i]->ecal.ref)) {
+                    continue;
+                }
+                metadata_item* ecal = getItem(entry, "CoefficientValues");
+                free(dm->singles[i]->ecal.ref);
+                dm->singles[i]->ecal.values = strdup(ecal->value);
+            }
+        }
+    }
+
     return dm;
 }
 
@@ -363,9 +433,6 @@ printDopplerMeasurement(const DopplerMeasurement* dm)
         printf("Doppler Measurement %s:\n", (*dm->singles)[0].filename);
         printf("\tDopplerMeasurement contains %d Single ", dm->n_singles);
         switch (dm->n_singles) {
-            case 0:
-                puts("Spectra");
-                break;
             case 1:
                 puts("Spectrum:");
                 break;
@@ -379,16 +446,13 @@ printDopplerMeasurement(const DopplerMeasurement* dm)
             printf("\t\t\tFilename: %s\n", dm->singles[i]->filename);
             printf("\t\t\tDetector: %s\n", dm->singles[i]->detname.ref);
             printf("\t\t\tEcal: %s\n", dm->singles[i]->ecal.ref);
-            printf("\t\t\tCounts: %lu\n", dm->singles[i]->counts);
+            printf("\t\t\tCounts: %lld\n", dm->singles[i]->counts);
         }
     }
 
     if (dm->coinc != NULL) {
         printf("\tDoppler Measurement contains %d Coincidence ", dm->n_coinc);
-        switch (dm->n_singles) {
-            case 0:
-                puts("Spectra");
-                break;
+        switch (dm->n_coinc) {
             case 1:
                 puts("Spectrum:");
                 break;
@@ -398,25 +462,29 @@ printDopplerMeasurement(const DopplerMeasurement* dm)
         }
         for (int i = 0; i < dm->n_coinc; i++) {
             printf("\t\tSpectrum %d:\n", i);
-            printf("\t\t\tWidth (Detector 1 Channels): %d\n", dm->coinc[i]->width);
-            printf("\t\t\tHeight (Detector 2 Channels): %d\n", dm->coinc[i]->height);
+            printf("\t\t\tWidth (Detector 1 Channels): %d\n",
+                    dm->coinc[i]->width);
+            printf("\t\t\tHeight (Detector 2 Channels): %d\n",
+                    dm->coinc[i]->height);
             printf("\t\t\tFilename: %s\n", dm->coinc[i]->filename);
             printf("\t\t\tParentname: %s\n", dm->coinc[i]->parentname);
             printf("\t\t\tDetectorpair: %s\n", dm->coinc[i]->detpair.ref);
-            printf("\t\t\tCounts: %lu\n", dm->coinc[i]->counts);
+            printf("\t\t\tCounts: %lld\n", dm->coinc[i]->counts);
         }
     }
 
     return;
 }
 
+/*
+ * Assemble DopplerMeasurement from n42 file.
+ */
 DopplerMeasurement*
 import_n42(const char* directory, const char* filename, const int verbose)
 {
-    int l = strlen(directory) + strlen(filename) + 1;
-    char* filepath = (char*)malloc(l);
-    snprintf(filepath, l, "%s%s", directory, filename);
+    char* filepath = concatPath(directory, filename);
 	xmlDocPtr doc = xmlParseFile(filepath);
+    free(filepath);
 
 	if (doc == NULL) {
 		fprintf(stderr, "Document not parsed successfully.\n");
@@ -437,9 +505,7 @@ import_n42(const char* directory, const char* filename, const int verbose)
         printf("\n%s: End of metadata\n\n", filepath);
     }
     */
-    DopplerMeasurement* dm = metadataToDoppler(metadata, directory, filepath);
-
-    free(filepath);
+    DopplerMeasurement* dm = metadataToDoppler(metadata, directory, filename);
 
     if (verbose) {
         printDopplerMeasurement(dm);
@@ -464,10 +530,10 @@ freeDopplerMeasurement(DopplerMeasurement* dm)
                     free(dm->singles[i]->filename);
                 }
                 if (dm->singles[i]->detname.ref != NULL) {
-                    free(dm->singles[i]->detname.ref);
+                    free(dm->singles[i]->detname.name);
                 }
                 if (dm->singles[i]->ecal.ref != NULL) {
-                    free(dm->singles[i]->ecal.ref);
+                    free(dm->singles[i]->ecal.values);
                 }
                 if (dm->singles[i] != NULL) {
                     free(dm->singles[i]);

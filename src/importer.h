@@ -29,6 +29,9 @@ spectrumStrToArr(char* spectrum, SingleSpectrum* s);
 static void
 import_png(char* filename, CoincidenceSpectrum* coinc);
 
+char*
+concatPath(const char* directory, const char* filename);
+
 static DopplerMeasurement*
 metadataToDoppler(metadata_item* metadata, const char* directory,
                   const char* filename);

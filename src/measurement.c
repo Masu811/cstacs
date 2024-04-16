@@ -60,7 +60,7 @@ importMeasurementCampaign(const char* directory)
             DopplerMeasurement* dm = import_n42(directory, entry->d_name, 0);
             mc->measurements = ((DopplerMeasurement**)
                                 realloc(mc->measurements,
-                                        (i + 1) * sizeof(DopplerMeasurement*)));
+                                    (i + 1) * sizeof(DopplerMeasurement*)));
             mc->measurements[i] = dm;
             mc->n_measurements++;
             file_idx++;
@@ -163,7 +163,8 @@ showCoincidenceSpectrum(CoincidenceSpectrum* c, const int plot_width)
 
     for (float y = 0; y < c->height; y = y + step_width) {
         for (float x = 0; x < c->width; x = x + step_width) {
-            printf("%d ", 10 * (int)c->spectrum[(int)y * c->width + (int)x] / max_counts);
+            int d = 10 * c->spectrum[(int)y * c->width + (int)x] / max_counts;
+            printf("%d ", d);
         }
         printf("\n");
     }
@@ -180,21 +181,17 @@ main(int argc, char** argv)
 {
    int verbose = 0;
 
-    if (argc > 1) {
-        if (atoi(argv[1]) == 1) {
-            verbose = 1;
-            puts("Debugging mode enabled");
-        }
+    if (argc < 2) {
+        puts("Usage: ./measurement <filepath>");
+        return 1;
     }
 
     clock_t start, stop;
     double cpu_time;
 
     start = clock();
-    // must end with "/"
-    char* filepath = ("/home/msuhr/Labbeam/Measurements/2024-01-04_depth-profile_Copper/");
 
-    MeasurementCampaign* mc = importMeasurementCampaign(filepath);
+    MeasurementCampaign* mc = importMeasurementCampaign(argv[1]);
     evaluateMeasurementCampaign(mc);
     printMeasurementCampaign(mc);
     freeMeasurementCampaign(mc);
