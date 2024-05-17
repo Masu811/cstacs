@@ -1,11 +1,14 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <png.h>
+//#include <png.h>
+#include "stb_image.h"
 
 #include "importer.h"
 #include "structs.h"
@@ -202,18 +205,18 @@ spectrumStrToArr(char* spectrum, SingleSpectrum* s)
 
     int number;
     char* ptr = spectrum;
-    char* space = " ";
+    char* endptr;
 
-    while (sscanf(ptr, "%d", &number) == 1) {
+    while (*ptr) {
+        number = (int)strtol(ptr, &endptr, 10);
+        if (ptr == endptr) {
+            break;
+        }
         s->spectrum[s->spectrum_size++] = number;
-        do {
-            ptr++;
-        } while (*ptr != *space && *ptr);
+        ptr = endptr;
     }
 
     s->spectrum = (int*)realloc(s->spectrum, s->spectrum_size * sizeof(int));
-
-    return;
 }
 
 /*
@@ -222,70 +225,31 @@ spectrumStrToArr(char* spectrum, SingleSpectrum* s)
 static void
 import_png(char* filename, CoincidenceSpectrum* coinc)
 {
-    int width, height;
-    png_byte color_type;
-    png_byte bit_depth;
-    png_bytep *row_pointers = NULL;
-    FILE *fp = fopen(filename, "rb");
-
-    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                                             NULL, NULL, NULL);
-    if(!png) abort();
-
-    png_infop info = png_create_info_struct(png);
-    if(!info) abort();
-
-    if(setjmp(png_jmpbuf(png))) abort();
-
-    png_init_io(png, fp);
-
-    png_read_info(png, info);
-
-    width      = png_get_image_width(png, info);
-    height     = png_get_image_height(png, info);
-    color_type = png_get_color_type(png, info);
-    bit_depth  = png_get_bit_depth(png, info);
-
-    if (color_type != PNG_COLOR_TYPE_RGB) {
-        puts("Currently only RGB PNG evaluation is implemented");
-        fclose(fp);
-        png_destroy_read_struct(&png, &info, NULL);
+    int width, height, channels;
+    unsigned char* img = stbi_load(filename, &width, &height, &channels, 3);
+    if (img == NULL) {
+        fprintf(stderr, "Error: Could not load png file %s\n", filename);
         return;
     }
 
-    png_read_update_info(png, info);
-
-    if (row_pointers) abort();
-
-    row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
-    for(int y = 0; y < height; y++) {
-        row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
+    coinc->width = width;
+    coinc->height = height;
+    coinc->spectrum = (int*)malloc(sizeof(int) * width * height);
+    if (!coinc->spectrum) {
+        perror("Failed to allocate memory for coincidence spectrum");
+        stbi_image_free(img);
+        return;
     }
 
-    png_read_image(png, row_pointers);
-
-    fclose(fp);
-
-    png_destroy_read_struct(&png, &info, NULL);
-
-    coinc->spectrum = (int*)malloc(sizeof(int) * width * height);
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            png_byte* ptr = &(row_pointers[y][x * 3]);
-            int value = ptr[0] | (ptr[1] << 8) | (ptr[2] << 16);
+            int index = (y * width + x) * 3;
+            int value = img[index] | (img[index + 1] << 8) | (img[index + 2] << 16);
             coinc->spectrum[y * width + x] = value;
         }
     }
 
-    for(int y = 0; y < height; y++) {
-        free(row_pointers[y]);
-    }
-    free(row_pointers);
-
-    coinc->width = width;
-    coinc->height = height;
-
-    return;
+    stbi_image_free(img);
 }
 
 /* 
@@ -566,7 +530,6 @@ freeDopplerMeasurement(DopplerMeasurement* dm)
 
     return;
 }
-
 
 /*
 int
