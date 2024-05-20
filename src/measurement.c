@@ -7,10 +7,10 @@
 
 #include "structs.h"
 #include "importer.h"
+#include "single.h"
 
 
-
-void
+static void
 progress(const int done, const int total, const int bar_length)
 {
     printf("[");
@@ -24,10 +24,10 @@ progress(const int done, const int total, const int bar_length)
     printf("] %d / %d (%.1f %%)", done, total, 100 * fraction);
 }
 
-MeasurementCampaign*
-importMeasurementCampaign(const char* directory)
+MeasurementCampaign
+*importMeasurementCampaign(const char *directory)
 {
-    MeasurementCampaign* mc = ((MeasurementCampaign*)
+    MeasurementCampaign *mc = ((MeasurementCampaign*)
                                calloc(1, sizeof(MeasurementCampaign)));
     mc->measurements = ((DopplerMeasurement**)
                         calloc(1, sizeof(DopplerMeasurement*)));
@@ -57,14 +57,14 @@ importMeasurementCampaign(const char* directory)
     while ((entry = readdir(dir)) != NULL) {
         if (strstr(entry->d_name, ".n42\0") != NULL) {
             int i = mc->n_measurements;
-            DopplerMeasurement* dm = import_n42(directory, entry->d_name, 0);
+            DopplerMeasurement *dm = import_n42(directory, entry->d_name, 0);
             mc->measurements = ((DopplerMeasurement**)
                                 realloc(mc->measurements,
                                     (i + 1) * sizeof(DopplerMeasurement*)));
             mc->measurements[i] = dm;
             mc->n_measurements++;
             file_idx++;
-            printf("\rInitializing Measurement Campaign: ");
+            printf("\rImporting Measurement Campaign: ");
             progress(file_idx, n_files, 30);
         }
     }
@@ -76,7 +76,7 @@ importMeasurementCampaign(const char* directory)
 }
 
 void
-evaluateSingleSpectrum(SingleSpectrum* s)
+evaluateSingleSpectrum(SingleSpectrum *s, const int verbose)
 {
    for (int i = 0; i < s->spectrum_size; i++) {
       s->counts = s->counts + s->spectrum[i];
@@ -84,70 +84,63 @@ evaluateSingleSpectrum(SingleSpectrum* s)
 
    s->dcounts = sqrt(s->counts);
 
-   return;
+   double v2p_bounds[] = {450, 500, 506, 516};
+
+   analyze(s, 1.1, 1.0, 3.0, 0, 60.0, 0, 1, v2p_bounds, 0, verbose, 0);
 }
 
 void
-evaluateCoincidenceSpectrum(CoincidenceSpectrum* c)
+evaluateCoincidenceSpectrum(CoincidenceSpectrum *c, const int verbose)
 {
    for (int i = 0; i < c->width * c->height; i++) {
       c->counts = c->counts + c->spectrum[i];
     }
 
    c->dcounts = sqrt(c->counts);
-
-   return;
 }
 
 void
-evaluateDopplerMeasurement(DopplerMeasurement* dm)
+evaluateDopplerMeasurement(DopplerMeasurement *dm, const int verbose)
 {
     for (int i = 0; i < dm->n_singles; i++) {
-        evaluateSingleSpectrum(dm->singles[i]);
+        evaluateSingleSpectrum(dm->singles[i], verbose);
     }
     for (int i = 0; i < dm->n_coinc; i++) {
-        evaluateCoincidenceSpectrum(dm->coinc[i]);
+        evaluateCoincidenceSpectrum(dm->coinc[i], verbose);
     }
-
-    return;
 }
 
 void
-evaluateMeasurementCampaign(MeasurementCampaign* mc)
+evaluateMeasurementCampaign(MeasurementCampaign *mc, const int verbose)
 {
+    puts("Analyzing Measurement Campaign...");
     for (int i = 0; i < mc->n_measurements; i++) {
-        evaluateDopplerMeasurement(mc->measurements[i]);
+        evaluateDopplerMeasurement(mc->measurements[i], verbose);
     }
-
-    return;
 }
 
 void
-printMeasurementCampaign(MeasurementCampaign* mc)
+printMeasurementCampaign(MeasurementCampaign *mc)
 {
     printf("MeasurementCampaign contains %d DopplerMeasurements:\n",
             mc->n_measurements);
     for (int i = 0; i < mc->n_measurements; i++) {
         printDopplerMeasurement(mc->measurements[i]);
     }
-
-    return;
 }
 
 void
-freeMeasurementCampaign(MeasurementCampaign* mc)
+freeMeasurementCampaign(MeasurementCampaign *mc)
 {
     for (int i = 0; i < mc->n_measurements; i++) {
         freeDopplerMeasurement(mc->measurements[i]);
     }
     free(mc->measurements);
     free(mc);
-
-    return;
 }
 
 void
-showCoincidenceSpectrum(CoincidenceSpectrum* c, const int plot_width)
+showCoincidenceSpectrum(CoincidenceSpectrum *c, const int plot_width)
 {
     float step_width = (float)c->width / plot_width;
     int plot_height = c->height / plot_width;
@@ -170,14 +163,12 @@ showCoincidenceSpectrum(CoincidenceSpectrum* c, const int plot_width)
     }
 
     printf("%d\n", max_counts);
-
-    return;
 }
 
 
 
 int
-main(int argc, char** argv)
+main(int argc, char **argv)
 {
    int verbose = 0;
 
@@ -191,9 +182,9 @@ main(int argc, char** argv)
 
     start = clock();
 
-    MeasurementCampaign* mc = importMeasurementCampaign(argv[1]);
-    evaluateMeasurementCampaign(mc);
-    printMeasurementCampaign(mc);
+    MeasurementCampaign *mc = importMeasurementCampaign(argv[1]);
+    evaluateMeasurementCampaign(mc, 1);
+    //printMeasurementCampaign(mc);
     freeMeasurementCampaign(mc);
 
     stop = clock();

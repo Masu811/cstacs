@@ -1,2 +1,8 @@
-libxml
-libpng
+base functionality:
+    importer:
+        libxml
+    single, coinc:
+        libgsl
+
+NVIDIA GPU acceleration:
+    nvidia cuda-toolkit

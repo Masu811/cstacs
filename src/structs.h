@@ -4,71 +4,74 @@
 #include <stdlib.h>
 
 typedef struct metadata_item {
-    char* key;
-    char* value;
-    struct metadata_item* children;
-    struct metadata_item* next;
+    char *key;
+    char *value;
+    struct metadata_item *children;
+    struct metadata_item *next;
 } metadata_item;
 
 typedef struct SingleSpectrum {
-    int* spectrum;
+    int *spectrum;
     int spectrum_size;
-    char* filename;
+    double *energies;
+    char *filename;
     union {
-        char* ref;
-        char* name;
+        char *ref;
+        char *name;
     } detname;
     union {
-        char* ref;
-        char* values;
+        char *ref;
+        double values[2];
     } ecal;
-    float eres;
-    long long counts;
-    float dcounts;
-    float s;
-    float ds;
-    float w;
-    float dw;
-    float v2p;
-    float dv2p;
-    long long peak_counts;
-    float dpeak_counts;
+    double eres;
+    unsigned long long counts;
+    double dcounts;
+    double s;
+    double ds;
+    double w;
+    double dw;
+    double v2p;
+    double dv2p;
+    unsigned long long peak_counts;
+    double dpeak_counts;
 } SingleSpectrum;
 
 typedef struct CoincidenceSpectrum {
-    int* spectrum;
+    int *spectrum;
+    double *energies_1;
+    double *energies_2;
     int width;
     int height;
-    char* filename;
-    char* parentname;
+    char *filename;
+    char *parentname;
     union {
-        char* ref;
-        char* name;
+        char *ref;
+        char *name;
     } detpair;
-    int* window;
-    float coinc_time;
-    float eres;
-    long long counts;
-    float dcounts;
-    float s;
-    float ds;
-    float w;
-    float dw;
-    long long peak_counts;
-    float dpeak_counts;
+    int *window;
+    double coinc_time;
+    double eres;
+    unsigned long long counts;
+    double dcounts;
+    double s;
+    double ds;
+    double w;
+    double dw;
+    unsigned long long peak_counts;
+    double dpeak_counts;
 } CoincidenceSpectrum;
 
 typedef struct DopplerMeasurement {
-    char* filename;
-    SingleSpectrum** singles;
+    char *filename;
+    SingleSpectrum **singles;
     int n_singles;
-    CoincidenceSpectrum** coinc;
+    CoincidenceSpectrum **coinc;
     int n_coinc;
-    metadata_item* metadata;
+    metadata_item *metadata;
 } DopplerMeasurement;
 
 typedef struct MeasurementCampaign {
-    DopplerMeasurement** measurements;
+    DopplerMeasurement **measurements;
     int n_measurements;
 } MeasurementCampaign;
 
