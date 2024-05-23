@@ -78,30 +78,43 @@ MeasurementCampaign
 void
 evaluateSingleSpectrum(SingleSpectrum *s, const int verbose)
 {
-   for (int i = 0; i < s->spectrum_size; i++) {
-      s->counts = s->counts + s->spectrum[i];
+    if (s == NULL) {
+        puts("Cannot analyze uninitialized Single Spectrum");
+        return;
+    }
+    for (int i = 0; i < s->spectrum_size; i++) {
+        s->counts = s->counts + s->spectrum[i];
     }
 
-   s->dcounts = sqrt(s->counts);
+    s->dcounts = sqrt(s->counts);
 
-   double v2p_bounds[] = {450, 500, 506, 516};
+    double v2p_bounds[] = {450, 500, 506, 516};
 
-   analyze(s, 1.1, 1.0, 3.0, 0, 60.0, 0, 1, v2p_bounds, 0, verbose, 0);
+    analyze(s, 1.1, 1.0, 3.0, 0, 60.0, 0, 0, v2p_bounds, 0, verbose, 0);
 }
 
 void
 evaluateCoincidenceSpectrum(CoincidenceSpectrum *c, const int verbose)
 {
-   for (int i = 0; i < c->width * c->height; i++) {
-      c->counts = c->counts + c->spectrum[i];
+    if (c == NULL) {
+        puts("Cannot analyze uninitialized Coincidence Spectrum");
+        return;
+    }
+    for (int i = 0; i < c->width * c->height; i++) {
+        c->counts = c->counts + c->spectrum[i];
     }
 
-   c->dcounts = sqrt(c->counts);
+    c->dcounts = sqrt(c->counts);
 }
 
 void
 evaluateDopplerMeasurement(DopplerMeasurement *dm, const int verbose)
 {
+    if (dm == NULL) {
+        puts("Cannot analyze uninitialized Doppler Measurement");
+        return;
+    }
+
     for (int i = 0; i < dm->n_singles; i++) {
         evaluateSingleSpectrum(dm->singles[i], verbose);
     }
@@ -113,6 +126,11 @@ evaluateDopplerMeasurement(DopplerMeasurement *dm, const int verbose)
 void
 evaluateMeasurementCampaign(MeasurementCampaign *mc, const int verbose)
 {
+    if (mc == NULL) {
+        puts("Cannot analyze uninitialized Measurement Campaign");
+        return;
+    }
+
     puts("Analyzing Measurement Campaign...");
     for (int i = 0; i < mc->n_measurements; i++) {
         evaluateDopplerMeasurement(mc->measurements[i], verbose);
@@ -132,11 +150,16 @@ printMeasurementCampaign(MeasurementCampaign *mc)
 void
 freeMeasurementCampaign(MeasurementCampaign *mc)
 {
-    for (int i = 0; i < mc->n_measurements; i++) {
-        freeDopplerMeasurement(mc->measurements[i]);
+    if (mc != NULL) {
+        for (int i = 0; i < mc->n_measurements; i++) {
+            freeDopplerMeasurement(mc->measurements[i]);
+            mc->measurements[i] = NULL;
+        }
+        free(mc->measurements);
+        mc->measurements = NULL;
+        free(mc);
+        mc = NULL;
     }
-    free(mc->measurements);
-    free(mc);
 }
 
 void

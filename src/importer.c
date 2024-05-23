@@ -165,9 +165,11 @@ freeMetadata(metadata_item *metadata)
 {
     if (metadata->key != NULL) {
         free(metadata->key);
+        metadata->key = NULL;
     }
     if (metadata->value != NULL) {
         free(metadata->value);
+        metadata->value = NULL;
     }
     if (metadata->children != NULL) {
         freeMetadata(metadata->children);
@@ -176,6 +178,7 @@ freeMetadata(metadata_item *metadata)
         freeMetadata(metadata->next);
     }
     free(metadata);
+    metadata = NULL;
 }
 
 /*
@@ -461,7 +464,8 @@ import_n42(const char *directory, const char *filename, const int verbose)
     free(filepath);
 
 	if (doc == NULL) {
-		fprintf(stderr, "Document not parsed successfully.\n");
+		fprintf(stderr, "Document not parsed successfully. "
+                "Filepath might be wrong.\n");
 		return NULL;
 	}
 
@@ -494,45 +498,58 @@ freeDopplerMeasurement(DopplerMeasurement *dm)
     if (dm != NULL) {
         if (dm->metadata != NULL) {
             freeMetadata(dm->metadata);
+            dm->metadata = NULL;
         }
         if (dm->singles != NULL) {
             for (int i = 0; i < dm->n_singles; i++) {
                 if (dm->singles[i]->spectrum != NULL) {
                     free(dm->singles[i]->spectrum);
+                    dm->singles[i]->spectrum = NULL;
                 }
                 if (dm->singles[i]->filename != NULL) {
                     free(dm->singles[i]->filename);
+                    dm->singles[i]->filename = NULL;
                 }
                 if (dm->singles[i]->detname.name != NULL) {
                     free(dm->singles[i]->detname.name);
+                    dm->singles[i]->detname.name = NULL;
                 }
                 if (dm->singles[i] != NULL) {
                     free(dm->singles[i]);
+                    dm->singles[i] = NULL;
                 }
             }
             free(dm->singles);
+            dm->singles = NULL;
         }
         if (dm->coinc != NULL) {
             for (int i = 0; i < dm->n_coinc; i++) {
                 if (dm->coinc[i]->spectrum != NULL) {
                     free(dm->coinc[i]->spectrum);
+                    dm->coinc[i]->spectrum = NULL;
                 }
                 if (dm->coinc[i]->filename != NULL) {
                     free(dm->coinc[i]->filename);
+                    dm->coinc[i]->filename = NULL;
                 }
                 if (dm->coinc[i]->parentname != NULL) {
                     free(dm->coinc[i]->parentname);
+                    dm->coinc[i]->parentname = NULL;
                 }
                 if (dm->coinc[i]->detpair.ref != NULL) {
                     free(dm->coinc[i]->detpair.ref);
+                    dm->coinc[i]->detpair.ref = NULL;
                 }
                 if (dm->coinc[i] != NULL) {
                     free(dm->coinc[i]);
+                    dm->coinc[i] = NULL;
                 }
             }
             free(dm->coinc);
+            dm->coinc = NULL;
         }
         free(dm);
+        dm = NULL;
     }
 }
 
