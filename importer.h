@@ -3,46 +3,34 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+
 #include "structs.h"
 
-static metadata_item
-*getItem(const metadata_item *metadata, const char *key);
+static metadata_item *getItem(metadata_item *metadata, char *key);
 
-static int
-onlyTextChildren(const xmlNodePtr node);
+static int onlyTextChildren(xmlNodePtr node);
 
-static metadata_item
-*insertAttr(const xmlAttrPtr attr, const xmlNodePtr next);
+static metadata_item *insertAttr(xmlAttrPtr attr, xmlNodePtr next);
 
-static metadata_item
-*loadxmlTree(const xmlNodePtr root);
+static metadata_item *loadxmlTree(xmlNodePtr root);
 
-static void
-printMetadata(const metadata_item *metadata);
+static void printMetadata(metadata_item *metadata);
 
-static void
-freeMetadata(metadata_item *metadata);
+static void freeMetadata(metadata_item *metadata);
 
-static void
-spectrumStrToArr(char *spectrum, SingleSpectrum *s);
+static void spectrumStrToArr(char *spectrum, SingleSpectrum *s);
 
-static void
-import_png(char *filename, CoincidenceSpectrum *coinc);
+static void import_png(char *filename, CoincidenceSpectrum *coinc);
 
-char
-*concatPath(const char *directory, const char *filename);
+char *concatPath(char *directory, char *filename);
 
-static DopplerMeasurement
-*metadataToDoppler(metadata_item *metadata, const char *directory,
-                  const char *filename);
+static DopplerMeasurement *metadataToDoppler(metadata_item *metadata,
+                                             char *directory, char *filename);
 
-void
-printDopplerMeasurement(const DopplerMeasurement *dm);
+void printDopplerMeasurement(DopplerMeasurement *dm);
 
-DopplerMeasurement
-*import_n42(const char *directory, const char *filepath, const int verbose);
+DopplerMeasurement *import_n42(char *directory, char *filepath);
 
-void
-freeDopplerMeasurement(DopplerMeasurement *dm);
+void freeDopplerMeasurement(DopplerMeasurement *dm);
 
 #endif
