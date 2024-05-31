@@ -1,28 +1,36 @@
-# CSTACS – STACS in C
+# CSTACS
 
 
 ## Description
-CSTACS is the implementation of the Python project [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs) in the C programming language aiming to minimize computation time.
+CSTACS is the C library and Python extension library of the Python project [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs). As a Python extension library, CSTACS aims at optimizing performance critical parts of the Python library, following the example of NumPy.
 
-## Project status
-Currently it's possible to create Doppler measurements from n42 / png files and measurement campaigns from a directory of such. Doppler measurements contain metadata and in particular single and coincidence spectra in the form of integer arrays. The total counts of spectra can be calculated as first parameter.
-
-## Roadmap
-1. **Recreate the basic functionality of STACS**, i.e. the methods "depth_profiles", "ratio_plotter" and everything they depend on, as a C standalone.
-2. **Create a Python extension module** containing the functions that are significantly faster in C, following the example of NumPy.
-3. **Include the NVIDIA CUDA framework** to enable parallel mass computation on GPUs.
-
-## Support
-For bug reports or feature requests, please contact maximilian.suhr@frm2.tum.de.
-
-## Contributing
-Contributions are greatly welcome.
+## Project Status
+- [x] .n42 file import
+  - [x] Datatypes
+  - [x] Import of metadata
+  - [x] .png file import
+  - [x] Spectra import & type conversion
+  - [x] Reference resolution (energy calibration, detector names)
+- [ ] Spectra analysis
+  - [ ] Single Spectra
+    - [x] Peak parameters via Gaussian fit
+    - [x] Peak extraction
+    - [ ] Background subtraction
+    - [ ] Line shape parameter calculation
+  - [ ] Coincidence Spectra
+    - [ ] Peak parameters via 2D-Gaussian fit
+    - [ ] Background subtraction
+    - [ ] Peak extraction
+    - [ ] Line shape parameter calculation
+- [ ] Higher level analysis
+  - [ ] (Depth) profiles
+  - [ ] Ratio curves
 
 ## Authors and acknowledgment
-Implementation of the original Python version:
+Implementation of the original Python library:
+- Vassily Burwitz
 - Leon Chryssos
 - Lucian Mathes
-- Vassily Burwitz
 
 Translation to C:
 - Maximilian Suhr
