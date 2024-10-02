@@ -7,10 +7,10 @@
 #include <libxml/tree.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "../include/stb_image.h"
 
-#include "importer.h"
-#include "structs.h"
+#include "../include/importer.h"
+#include "../include/structs.h"
 
 extern int verbose;
 extern int debug;
@@ -57,6 +57,8 @@ static int onlyTextChildren(xmlNodePtr node)
 
     return textChildrenOnly;
 }
+
+static metadata_item *loadxmlTree(xmlNodePtr root);
 
 /*
  * Insert xml attribute nodes as metadata item in front of 'next'.

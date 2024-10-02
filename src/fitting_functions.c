@@ -1,7 +1,7 @@
 #include <gsl/gsl_multifit_nlinear.h>
 #include <gsl/gsl_blas.h>
 
-#include "fitting_functions.h"
+#include "../include/fitting_functions.h"
 
 #define PI 3.141592653589793
 

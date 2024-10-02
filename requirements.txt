@@ -1,7 +1,4 @@
 importer:
-    libxml
+    libxml2-dev
 single, coinc:
     libgsl
-
-NVIDIA GPU acceleration:
-    cuda-toolkit

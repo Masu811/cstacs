@@ -5,9 +5,9 @@
 #include <math.h>
 #include <time.h>
 
-#include "structs.h"
-#include "importer.h"
-#include "single.h"
+#include "../include/structs.h"
+#include "../include/importer.h"
+#include "../include/single.h"
 
 int verbose;
 int debug;

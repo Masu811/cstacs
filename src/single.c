@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "structs.h"
-#include "single.h"
-#include "fitting_functions.h"
+#include "../include/structs.h"
+#include "../include/single.h"
+#include "../include/fitting_functions.h"
 
 extern int verbose;
 extern int debug;
