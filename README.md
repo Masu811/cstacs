@@ -2,13 +2,11 @@
 
 
 ## Description
-CSTACS is the C version of the Python project [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs) with the goal of reducing computation time.
+CSTACS is a project that includes the re-implementation of the Python project [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs) in other programming languages, each bringing their own advantages and disadvantages.
 
-This project is not primarily intended as a replacement for the Python version. Instead, its purpose is to show which parts of the Python library could benefit significantly in single-thread performance from a C extension, following the example of NumPy.
+Each language is implemented on its own branch. The main branch is written in C++. Currently featured languages are C++ and C. The addition of Rust is planned.
 
-Mentioning C extensions, CSTACS might also help with the integration of NVIDIA CUDA, which is planned for coincidence data evaluation in the future for both C and Python version.
-
-Since CSTACS is (going to be) a fully functional twin of its Python counterpart, it might be used as an alternative altogether. The benefits of this version include performance maximization and RAM usage minimization, making the evaluation of e.g. large coincidence pngs or measurement campaigns possible. For this purpose, a RAM saver mode could be implemented in the future, that e.g. only ever holds one spectrum in RAM at a time and uses the smallest possible data types to store the data.
+The sole purpose of this project is fun and learning. If the results are at some point in time any useful to anyone, great.
 
 ## Project Status
 - [x] .n42 file import
