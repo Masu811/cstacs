@@ -1,6 +1,10 @@
 #ifndef FITTING_FUNCTIONS_H
 #define FITTING_FUNCTIONS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <gsl/gsl_multifit_nlinear.h>
 #include <gsl/gsl_blas.h>
 
@@ -23,5 +27,9 @@ double gaussian(double x, double A, double x0, double sigma);
 double *fitGaussian(double *x, double *y, const size_t N, double init[3]);
 
 double *fitErf(double *x, double *y, const size_t N, double init[3]);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,12 +1,13 @@
+#include "fitting_functions.h"
+
 #include <gsl/gsl_multifit_nlinear.h>
 #include <gsl/gsl_blas.h>
 
-#include "../include/fitting_functions.h"
 
 #define PI 3.141592653589793
 
-extern int verbose;
-extern int debug;
+int debug = 0;
+
 
 double *fitWrapper(double *x, double *y, const size_t n, const size_t p,
                    double init[3],
