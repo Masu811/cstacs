@@ -9,30 +9,42 @@
 int debug = 0;
 
 
-double *fitWrapper(double *x, double *y, const size_t n, const size_t p,
-                   double init[3],
-                   int (*f)(const gsl_vector*, void*, gsl_vector*),
-                   int (*df)(const gsl_vector*, void*, gsl_matrix*),
-                   void (*callback)(const size_t, void*,
-                                    const gsl_multifit_nlinear_workspace*))
+/**
+ * @brief Perform the fit of the given function to the given data
+ *
+ * @param x pointer to the x data array
+ * @param y pointer to the y data array
+ * @param n length of x and y arrays
+ * @param p number of parameters of the function to be fitted (= length of `vary`)
+ * @param vary list of initial values of the params to be varied during fitting
+ * @param fix list of values of the params to be fixed during fitting
+ * @param f pointer to the function to fit
+ * @param df pointer to the derivative of function to fit
+ * @param callback pointer to the callback function to call in each fit iteration
+ */
+void fitWrapper(double *x, double *y, const size_t n, const size_t p,
+                 double vary[], double fixed[],
+                 int (*f)(const gsl_vector*, void*, gsl_vector*),
+                 int (*df)(const gsl_vector*, void*, gsl_matrix*),
+                 void (*callback)(const size_t, void*,
+                                  const gsl_multifit_nlinear_workspace*))
 {
     const gsl_multifit_nlinear_type *T = gsl_multifit_nlinear_trust;
     gsl_multifit_nlinear_workspace *w;
     gsl_multifit_nlinear_fdf fdf;
-    gsl_multifit_nlinear_parameters fdf_params =
-        gsl_multifit_nlinear_default_parameters();
+    gsl_multifit_nlinear_parameters fdf_params = gsl_multifit_nlinear_default_parameters();
 
     gsl_vector *res;
     gsl_matrix *J;
     gsl_matrix *covar = gsl_matrix_alloc(p, p);
-    data_t d = {n, x, y};
-    gsl_vector_view params = gsl_vector_view_array(init, p);
+    data_t d = {n, x, y, fixed};
+    gsl_vector_view params = gsl_vector_view_array(vary, p);
     double chisq, chisq0;
     int status, info;
     size_t i;
 
-    const double xtol = 1e-3;
-    const double gtol = 1e-3;
+    const double xtol = 1e-8;
+    const double gtol = 1e-8;
     const double ftol = 0.0;
 
     /* define the function to be minimized */
@@ -57,8 +69,7 @@ double *fitWrapper(double *x, double *y, const size_t n, const size_t p,
     if (!debug)
         callback = NULL;
 
-    status = gsl_multifit_nlinear_driver(100, xtol, gtol, ftol,
-                                         callback, NULL, &info, w);
+    status = gsl_multifit_nlinear_driver(100, xtol, gtol, ftol, callback, NULL, &info, w);
 
     /* compute covariance of best fit parameters */
     J = gsl_multifit_nlinear_jac(w);
@@ -97,38 +108,32 @@ double *fitWrapper(double *x, double *y, const size_t n, const size_t p,
         fprintf (stderr, "status = %s\n", gsl_strerror(status));
     }
 
-    double *result = (double*)malloc(p * sizeof(double));
-
     for (int i = 0; i < p; i++)
-        result[i] = gsl_vector_get(w->x, i);
+        vary[i] =  gsl_vector_get(w->x, i);
 
     gsl_multifit_nlinear_free(w);
     gsl_matrix_free(covar);
-
-    return result;
 }
 
-double gaussian(double x, double A, double x0, double sigma)
+inline double gaussian(double x, double A, double x0, double inv_sig)
 {
-    return A * exp(-0.5 * pow((x - x0) / sigma, 2));
+    return A * exp(-0.5 * pow((x - x0) * inv_sig, 2));
 }
 
 static int gaussian_f(const gsl_vector *params, void *data, gsl_vector *f)
 {
-    size_t n = ((data_t*)data)->n;
-    double *x = ((data_t*)data)->x;
-    double *y = ((data_t*)data)->y;
+    data_t *d = (data_t*)data;
+    size_t n = d->n;
+    double *x = d->x;
+    double *y = d->y;
 
     double A = gsl_vector_get(params, 0);
     double x0 = gsl_vector_get(params, 1);
-    double sigma = gsl_vector_get(params, 2);
-
-    if (sigma == 0)
-        return GSL_FAILURE;
+    double inv_sig = gsl_vector_get(params, 2);
 
     for (int i = 0; i < n; i++)
     {
-        double Yi = A * exp(-0.5 * pow((x[i] - x0) / sigma, 2));
+        double Yi = gaussian(x[i], A, x0, inv_sig);
         gsl_vector_set(f, i, Yi - y[i]);
     }
 
@@ -137,25 +142,24 @@ static int gaussian_f(const gsl_vector *params, void *data, gsl_vector *f)
 
 static int gaussian_df(const gsl_vector *params, void *data, gsl_matrix *J)
 {
-    size_t n = ((data_t*)data)->n;
-    double *x = ((data_t*)data)->x;
+    data_t *d = (data_t*)data;
+    size_t n = d->n;
+    double *x = d->x;
 
     double A = gsl_vector_get(params, 0);
     double x0 = gsl_vector_get(params, 1);
-    double sigma = gsl_vector_get(params, 2);
-
-    if (sigma == 0)
-        return GSL_FAILURE;
+    double inv_sig = gsl_vector_get(params, 2);
 
     for (size_t i = 0; i < n; i++)
     {
-        double df_dA = exp(-0.5 * pow((x[i] - x0) / sigma, 2));
-        double df_dx0 = A * df_dA * (x[i] - x0) / (sigma * sigma);
-        double df_dsigma = df_dx0 * (x[i] - x0) / sigma;
+        double df_dA = gaussian(x[i], 1, x0, inv_sig);
+        double h = A * df_dA * (x[i] - x0) * inv_sig;
+        double df_dx0 = h * inv_sig;
+        double df_dinv_sig = -h * (x[i] - x0);
 
         gsl_matrix_set(J, i, 0, df_dA);
         gsl_matrix_set(J, i, 1, df_dx0);
-        gsl_matrix_set(J, i, 2, df_dsigma);
+        gsl_matrix_set(J, i, 2, df_dinv_sig);
     }
 
     return GSL_SUCCESS;
@@ -173,7 +177,7 @@ static void gaussian_callback(const size_t iter, void *params,
 
     if (debug)
     {
-        printf("iter %2zu: A = %.4f, x0 = %.4f, sigma = %.4f, cond(J) = %8.4f, "
+        printf("iter %2zu: A = %.4f, x0 = %.4f, inv_sig = %.4f, cond(J) = %8.4f, "
                "|f(x)| = %.4f\n",
                 iter,
                 gsl_vector_get(x, 0),
@@ -184,26 +188,33 @@ static void gaussian_callback(const size_t iter, void *params,
     }
 }
 
-double *fitGaussian(double *x, double *y, const size_t N, double init[3])
+void fitGaussian(double *x, double *y, const size_t N, double init[3])
 {
-    return fitWrapper(x, y, N, 3, init,
-                      &gaussian_f, &gaussian_df, &gaussian_callback);
+    fitWrapper(x, y, N, 3, init, NULL, &gaussian_f, &gaussian_df, &gaussian_callback);
+}
+
+inline double my_erf(double x, double A, double x0, double inv_sig, double offset)
+{
+    return A * erf(inv_sig * (x - x0)) + offset;
 }
 
 static int erf_f(const gsl_vector *params, void *data, gsl_vector *f)
 {
-    size_t n = ((data_t*)data)->n;
-    double *x = ((data_t*)data)->x;
-    double *y = ((data_t*)data)->y;
+    data_t *d = (data_t*)data;
+    size_t n = d->n;
+    double *x = d->x;
+    double *y = d->y;
+    double *fixed = d->fixed;
 
     double A = gsl_vector_get(params, 0);
-    double x0 = gsl_vector_get(params, 1);
-    double smooth = gsl_vector_get(params, 2);
-    double offset = gsl_vector_get(params, 3);
+    double offset = gsl_vector_get(params,1);
+
+    double x0 = fixed[0];
+    double inv_sig = fixed[1];
 
     for (int i = 0; i < n; i++)
     {
-        double Yi = A * erf(smooth * (x[i] - x0)) + offset;
+        double Yi = my_erf(x[i], A, x0, inv_sig, offset);
         gsl_vector_set(f, i, Yi - y[i]);
     }
 
@@ -212,25 +223,24 @@ static int erf_f(const gsl_vector *params, void *data, gsl_vector *f)
 
 static int erf_df(const gsl_vector *params, void *data, gsl_matrix *J)
 {
-    size_t n = ((data_t*)data)->n;
-    double *x = ((data_t*)data)->x;
+    data_t *d = (data_t*)data;
+    size_t n = d->n;
+    double *x = d->x;
+    double *fixed = d->fixed;
 
     double A = gsl_vector_get(params, 0);
-    double x0 = gsl_vector_get(params, 1);
-    double smooth = gsl_vector_get(params, 2);
+
+    double x0 = fixed[0];
+    double inv_sig = fixed[1];
 
     for (size_t i = 0; i < n; i++)
     {
-        double df_dA = erf(smooth * (x[i] - x0));
-        double df_dx0 = (1.128379 * A * exp(-0.5 * pow(smooth * (x[i] - x0), 2))
-                         * smooth * smooth * (x[i] - x0));
-        double df_dsmooth = -df_dx0 * (x[i] - x0) / smooth;
+        double df_dA = erf(inv_sig * (x[i] - x0));
+        //double df_dinv_sig = 1.128379 * gaussian(x[i], A, x0, 1.4142 * inv_sig) * (x[i] - x0);
         double df_doffset = 1;
 
         gsl_matrix_set(J, i, 0, df_dA);
-        gsl_matrix_set(J, i, 1, df_dx0);
-        gsl_matrix_set(J, i, 2, df_dsmooth);
-        gsl_matrix_set(J, i, 3, df_doffset);
+        gsl_matrix_set(J, i, 1, df_doffset);
     }
 
     return GSL_SUCCESS;
@@ -248,19 +258,121 @@ static void erf_callback(const size_t iter, void *params,
 
     if (debug)
     {
-        printf("iter %2zu: A = %.4f, x0 = %.4f, sigma = %.4f, cond(J) = %8.4f, "
+        printf("iter %2zu: A = %.4f, offset = %.4f, cond(J) = %8.4f, "
                "|f(x)| = %.4f\n",
                 iter,
                 gsl_vector_get(x, 0),
                 gsl_vector_get(x, 1),
-                gsl_vector_get(x, 2),
                 1.0 / rcond,
                 gsl_blas_dnrm2(f));
     }
 }
 
-double *fitErf(double *x, double *y, const size_t N, double init[3])
+void fitErf(double *x, double *y, const size_t N, double init[4])
 {
-    return fitWrapper(x, y, N, 3, init,
-                      &erf_f, &erf_df, &erf_callback);
+    double vary[2] = {init[0], init[3]};
+    double fixed[2] = {init[1], init[2]};
+
+    fitWrapper(x, y, N, 2, vary, fixed, &erf_f, &erf_df, &erf_callback);
+
+    init[0] = vary[0];
+    init[3] = vary[1];
+}
+
+inline double gauss_erf(double x, double gauss_amp, double x0, double gauss_inv_sig,
+                        double erf_amp, double erf_inv_sig, double offset)
+{
+    return gauss_amp * exp(-0.5 * pow((x - x0) * gauss_inv_sig, 2))
+           + erf_amp * erf(erf_inv_sig * (x - x0)) + offset;
+}
+
+static int gauss_erf_f(const gsl_vector *params, void *data, gsl_vector *f)
+{
+    data_t *d = (data_t*)data;
+    size_t n = d->n;
+    double *x = d->x;
+    double *y = d->y;
+    double *fixed = d->fixed;
+
+    double gauss_amp = gsl_vector_get(params, 0);
+    double x0 = gsl_vector_get(params, 1);
+    double gauss_inv_sig = gsl_vector_get(params, 2);
+
+    double erf_amp = fixed[0];
+    double erf_inv_sig = fixed[1];
+    double offset = fixed[2];
+
+    for (int i = 0; i < n; i++)
+    {
+        double Yi = gauss_erf(x[i], gauss_amp, x0, gauss_inv_sig, erf_amp, erf_inv_sig, offset);
+        gsl_vector_set(f, i, Yi - y[i]);
+    }
+
+    return GSL_SUCCESS;
+}
+
+static int gauss_erf_df(const gsl_vector *params, void *data, gsl_matrix *J)
+{
+    data_t *d = (data_t*)data;
+    size_t n = d->n;
+    double *x = d->x;
+    double *fixed = d->fixed;
+
+    double gauss_amp = gsl_vector_get(params, 0);
+    double x0 = gsl_vector_get(params, 1);
+    double gauss_inv_sig = gsl_vector_get(params, 2);
+
+    double erf_amp = fixed[0];
+    double erf_inv_sig = fixed[1];
+    double offset = fixed[2];
+
+    for (size_t i = 0; i < n; i++)
+    {
+        double df_dgauss_amp = gaussian(x[i], 1, x0, gauss_inv_sig);
+        double h = gauss_amp * df_dgauss_amp * (x[i] - x0) * gauss_inv_sig;
+        double df_dx0 = h * gauss_inv_sig - 1.128379 * gaussian(x[i], erf_amp, x0, erf_inv_sig) * erf_inv_sig;
+        double df_dinv_sig = -h * (x[i] - x0);
+
+        gsl_matrix_set(J, i, 0, df_dgauss_amp);
+        gsl_matrix_set(J, i, 1, df_dx0);
+        gsl_matrix_set(J, i, 2, df_dinv_sig);
+    }
+
+    return GSL_SUCCESS;
+}
+
+static void gauss_erf_callback(const size_t iter, void *params,
+                               const gsl_multifit_nlinear_workspace *w)
+{
+    gsl_vector *f = gsl_multifit_nlinear_residual(w);
+    gsl_vector *x = gsl_multifit_nlinear_position(w);
+    double rcond;
+
+    /* compute reciprocal condition number of J(x) */
+    gsl_multifit_nlinear_rcond(&rcond, w);
+
+    if (debug)
+    {
+        printf("iter %2zu: gauss_amp = %.4f, x0 = %.4f, gauss_inv_sig = %.4f, cond(J) = %8.4f, "
+               "|f(x)| = %.4f\n",
+               iter,
+               gsl_vector_get(x, 0),
+               gsl_vector_get(x, 1),
+               gsl_vector_get(x, 2),
+               1.0 / rcond,
+               gsl_blas_dnrm2(f));
+    }
+}
+
+void fitGaussErf(double *x, double *y, const size_t N, double init[6])
+{
+    // Init contains: gauss_amp, center, gauss_inv_sig, erf_amp, erf_inv_sig, offset
+    double vary[3] = {init[0], init[1], init[2]};
+    double fixed[3] = {init[3], init[4], init[5]};
+
+    fitWrapper(x, y, N, 3, vary, fixed, &gauss_erf_f, &gaussian_df, &gauss_erf_callback);
+
+    init[0] = vary[0];
+    init[1] = vary[1];
+    init[2] = vary[2];
 }
