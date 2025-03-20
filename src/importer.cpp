@@ -50,10 +50,11 @@ std::vector<std::vector<unsigned int>> import_png(const std::string& filename) {
 
 
 DopplerMeasurement import_n42(
-    const std::string& filename,
-    const bool autocompute_singles,
-    const bool autocompute_coinc,
-    const bool skip_coinc)
+    const std::string& filename
+    // const bool autocompute_singles,
+    // const bool autocompute_coinc,
+    // const bool skip_coinc
+    )
 {
     using namespace rapidxml;
 
@@ -72,11 +73,6 @@ DopplerMeasurement import_n42(
     std::vector<CoincidenceSpectrum*> coinc;
 
     xml_node<> *meas = root->first_node("RadMeasurement");
-
-    std::vector<unsigned int> spectrum;
-    std::string detname = "";
-    std::tuple<double, double> ecal = {NAN, NAN};
-    double eres;
 
     unsigned int count_value;
     double ecal_value;
@@ -104,6 +100,11 @@ DopplerMeasurement import_n42(
             m.coinc.push_back(&c);
 
         } else {
+
+            std::vector<unsigned int> spectrum;
+            std::string detname = "";
+            std::tuple<double, double> ecal = {NAN, NAN};
+            double eres;
 
             // Get spectrum
 

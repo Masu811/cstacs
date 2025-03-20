@@ -9,9 +9,10 @@
 std::vector<std::vector<unsigned int>> import_png(const std::string& filename);
 
 DopplerMeasurement import_n42(
-    const std::string& filename,
-    const bool autocompute_singles = true,
-    const bool autocompute_coinc = true,
-    const bool skip_coinc = false);
+    const std::string& filename
+    // const bool autocompute_singles = true,
+    // const bool autocompute_coinc = true,
+    // const bool skip_coinc = false
+);
 
 #endif

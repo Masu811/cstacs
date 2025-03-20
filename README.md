@@ -51,6 +51,7 @@ make uninstall
 
 Assume we have a folder `measurement` filled with one `measurement_1.n42` file and corresponding `.png` file. We can import the file's spectra into a `DopplerMeasurement` with `Single`- and `CoincidenceSpectra` in the following way.
 ```c++
+#include <iostream>
 #include <stacs/stacs.hpp>
 
 int main() {

@@ -1,12 +1,14 @@
 #include "fitting_functions.h"
 
+#include <math.h>
+
 #include <gsl/gsl_multifit_nlinear.h>
 #include <gsl/gsl_blas.h>
 
 
 #define PI 3.141592653589793
 
-int debug = 0;
+int debug = 1;
 
 
 /**
@@ -43,13 +45,13 @@ void fitWrapper(double *x, double *y, const size_t n, const size_t p,
     int status, info;
     size_t i;
 
-    const double xtol = 1e-8;
+    const double xtol = 1e-6;
     const double gtol = 1e-8;
     const double ftol = 0.0;
 
     /* define the function to be minimized */
     fdf.f = f;
-    fdf.df = df;   /* set to NULL for finite-difference Jacobian */
+    fdf.df = df;        /* set to NULL for finite-difference Jacobian */
     fdf.fvv = NULL;     /* not using geodesic acceleration */
     fdf.n = n;
     fdf.p = p;
@@ -113,11 +115,6 @@ void fitWrapper(double *x, double *y, const size_t n, const size_t p,
 
     gsl_multifit_nlinear_free(w);
     gsl_matrix_free(covar);
-}
-
-inline double gaussian(double x, double A, double x0, double inv_sig)
-{
-    return A * exp(-0.5 * pow((x - x0) * inv_sig, 2));
 }
 
 static int gaussian_f(const gsl_vector *params, void *data, gsl_vector *f)
@@ -191,11 +188,6 @@ static void gaussian_callback(const size_t iter, void *params,
 void fitGaussian(double *x, double *y, const size_t N, double init[3])
 {
     fitWrapper(x, y, N, 3, init, NULL, &gaussian_f, &gaussian_df, &gaussian_callback);
-}
-
-inline double my_erf(double x, double A, double x0, double inv_sig, double offset)
-{
-    return A * erf(inv_sig * (x - x0)) + offset;
 }
 
 static int erf_f(const gsl_vector *params, void *data, gsl_vector *f)
@@ -277,13 +269,6 @@ void fitErf(double *x, double *y, const size_t N, double init[4])
 
     init[0] = vary[0];
     init[3] = vary[1];
-}
-
-inline double gauss_erf(double x, double gauss_amp, double x0, double gauss_inv_sig,
-                        double erf_amp, double erf_inv_sig, double offset)
-{
-    return gauss_amp * exp(-0.5 * pow((x - x0) * gauss_inv_sig, 2))
-           + erf_amp * erf(erf_inv_sig * (x - x0)) + offset;
 }
 
 static int gauss_erf_f(const gsl_vector *params, void *data, gsl_vector *f)

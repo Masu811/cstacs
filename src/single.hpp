@@ -42,7 +42,10 @@ public:
         const double w_dist = 3.0,
         const double peak_width = 60,
         const std::tuple<double, double, double, double> v2p_bounds = {450, 490, 506, 516},
-        const bool bg_corr = true);
+        const bool bg_corr = true,
+        const double bg_frac = 0.25,
+        const bool follow_peak = true,
+        const int follow_peak_order = 1);
 };
 
 #endif

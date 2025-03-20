@@ -46,7 +46,7 @@ public:
     DopplerMeasurement(DopplerMeasurement&& other);
 
     // Construct from filename
-    DopplerMeasurement(std::string path);
+    DopplerMeasurement(const std::string& path);
 
     DopplerMeasurement& operator<<(SingleSpectrum *s);
 

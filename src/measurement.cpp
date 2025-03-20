@@ -51,7 +51,7 @@ DopplerMeasurement::DopplerMeasurement(DopplerMeasurement&& other)
 {}
 
 
-DopplerMeasurement::DopplerMeasurement(std::string path)
+DopplerMeasurement::DopplerMeasurement(const std::string& path)
     : DopplerMeasurement(import_n42(path))
 {}
 
