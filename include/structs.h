@@ -3,28 +3,24 @@
 
 #include <stdbool.h>
 
-typedef struct metadata_item
-{
+typedef struct metadata_item {
     char *key;
     char *value;
     struct metadata_item *children;
     struct metadata_item *next;
 } metadata_item;
 
-typedef struct SingleSpectrum
-{
+typedef struct SingleSpectrum {
     int *spectrum;
     int spectrum_size;
     double *energies;
     char *filename;
     char *detname;
 
-    union
-    {
+    union {
         char *ref;
         double values[2];
-    }
-    ecal;
+    } ecal;
 
     bool ecal_found;
     double eres;
@@ -40,8 +36,7 @@ typedef struct SingleSpectrum
     double dpeak_counts;
 } SingleSpectrum;
 
-typedef struct CoincidenceSpectrum
-{
+typedef struct CoincidenceSpectrum {
     int *spectrum;
     double *energies_1;
     double *energies_2;
@@ -63,8 +58,7 @@ typedef struct CoincidenceSpectrum
     double dpeak_counts;
 } CoincidenceSpectrum;
 
-typedef struct DopplerMeasurement
-{
+typedef struct DopplerMeasurement {
     char *filename;
     SingleSpectrum **singles;
     int n_singles;
@@ -73,8 +67,7 @@ typedef struct DopplerMeasurement
     metadata_item *metadata;
 } DopplerMeasurement;
 
-typedef struct MeasurementCampaign
-{
+typedef struct MeasurementCampaign {
     DopplerMeasurement **measurements;
     int n_measurements;
 } MeasurementCampaign;
