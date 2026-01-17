@@ -119,15 +119,14 @@ void plotSingle(SingleSpectrum *s) {
 
     int n = s->spectrum_size;
 
-    double spectrum = intToDouble(s->spectrum, n);
+    double *spectrum = intToDouble(s->spectrum, n);
 
     char *headers[2] = {"Energy", "Counts"};
     double *columns[2] = {s->energies, spectrum};
 
     plot(headers, columns, 2, n);
 
-    free(x);
-    free(y);
+    free(spectrum);
 }
 
 /*
@@ -258,15 +257,14 @@ int analyze(
             }
 
             double *y =
-                intToDouble * (s->spectrum[left_peak_idx], n_ch_in_peak);
+                intToDouble(&(s->spectrum[left_peak_bnd_idx]), n_ch_in_peak);
 
-            double *columns[3] = {&(s->energies[left_peak_idx]), y, fit};
+            double *columns[3] = {&(s->energies[left_peak_bnd_idx]), y, fit};
 
             char *headers[3] = {"Energy", "Channel Data", "Best Fit"};
 
             plot(headers, columns, 3, n_ch_in_peak);
 
-            free(x);
             free(y);
             free(fit);
         }

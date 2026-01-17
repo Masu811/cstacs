@@ -16,18 +16,13 @@ extern int verbose;
 extern int debug;
 
 /*
- * Get the first child of metadata item 'metadata' whose key equals 'key'.
+ * Get the first child of metadata item 'node' whose key equals 'key'.
  * If found, return the pointer to that child, else return NULL.
  */
-static metadata_item *getItem(metadata_item *metadata, char *key) {
-    if (metadata == NULL) {
-        return NULL;
-    } else if (metadata->children == NULL) {
-        return NULL;
-    }
+static metadata_item *getItem(metadata_item *node, char *key) {
+    if (node == NULL || node->children == NULL) return NULL;
 
-    for (metadata_item *child = metadata->children; child;
-         child = child->next) {
+    for (metadata_item *child = node->children; child; child = child->next) {
         if (strcmp(child->key, key) == 0) return child;
     }
 
@@ -39,18 +34,15 @@ static metadata_item *getItem(metadata_item *metadata, char *key) {
  * If so, return 1, else return 0.
  */
 static int onlyTextChildren(xmlNodePtr node) {
-    if (node->children == NULL) return 0;
-
-    int textChildrenOnly = 1;
+    if (node == NULL || node->children == NULL) return 0;
 
     for (xmlNodePtr child = node->children; child; child = child->next) {
         if (child->type != XML_TEXT_NODE) {
-            textChildrenOnly = 0;
-            break;
+            return 0;
         }
     }
 
-    return textChildrenOnly;
+    return 1;
 }
 
 static metadata_item *loadxmlTree(xmlNodePtr root);
