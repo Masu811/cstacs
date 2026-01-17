@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/fitting_functions.h"
+#include "../include/fitting.h"
 #include "../include/single.h"
 #include "../include/structs.h"
 
@@ -241,7 +241,7 @@ int analyze(
 
         // contains amp, pos and sig of peak
         double *result = fitGaussian(
-            &(s->energies[left_peak_bnd_idx]), y, n_ch_in_peak, init
+            &(s->energies[left_peak_bnd_idx]), y, n_ch_in_peak, init, debug
         );
 
         if (debug) {
