@@ -22,18 +22,11 @@ stages:
 
 build:debian:
     stage: build
-    image: debian:bookworm
+    image: buildpack-deps:bookworm
     script:
         - echo "Installing Debian shared library"
-        - apt update
-        - apt install -y --no-install-recommends \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            libxml2-dev \
-            libgsl-dev \
-            libcriterion-dev
-        - ln -s /usr/include/libxml2/libxml /usr/include/libxml
+        - apt-get update
+        - apt-get install -y sudo libxml2-dev libgsl-dev libcriterion-dev
         - make
         - echo "Debian shared library installation completed"
 
@@ -42,28 +35,18 @@ build:arch:
     image: archlinux:latest
     script:
         - echo "Installing Arch shared library"
-        - pacman -Sy --noconfirm base-devel \
-            libxml2 \
-            gsl \
-            criterion
-        - ln -s /usr/include/libxml2/libxml /usr/include/libxml
+        - pacman -Syu --noconfirm archlinux-keyring
+        - pacman -Sy --noconfirm base-devel gsl criterion
         - make
         - echo "Arch shared library installation completed"
 
 unit-test-debian:
     stage: test
-    image: debian:bookworm
+    image: buildpack-deps:bookworm
     script:
         - echo "Building Debian tests"
-        - apt update
-        - apt install -y --no-install-recommends \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            libxml2-dev \
-            libgsl-dev \
-            libcriterion-dev
-        - ln -s /usr/include/libxml2/libxml /usr/include/libxml
+        - apt-get update
+        - apt-get install -y sudo libxml2-dev libgsl-dev libcriterion-dev
         - echo "Running Debian tests"
         - make test
         - echo "Debian tests completed"
@@ -73,11 +56,8 @@ unit-test-arch:
     image: archlinux:latest
     script:
         - echo "Building Arch tests"
-        - pacman -Sy --noconfirm base-devel \
-            libxml2 \
-            gsl \
-            criterion
-        - ln -s /usr/include/libxml2/libxml /usr/include/libxml
+        - pacman -Syu --noconfirm archlinux-keyring
+        - pacman -Sy --noconfirm base-devel gsl criterion
         - echo "Running Arch tests"
         - make test
         - echo "Arch tests completed"
