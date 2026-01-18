@@ -5,12 +5,13 @@
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlinear.h>
+#include <gsl/gsl_vector_double.h>
 #include <stdio.h>
 
 #include "../include/fitting.h"
 
-const double xtol = 1e-3;
-const double gtol = 1e-3;
+const double xtol = 1e-6;
+const double gtol = 1e-6;
 const double ftol = 0.0;
 
 /////////// Fit Utilities //////////
@@ -162,8 +163,10 @@ static double *postFit(FitEnv *fit_env, int debug) {
         return NULL;
     }
 
+    gsl_vector *x = gsl_multifit_nlinear_position(fit_env->w);
+
     for (int i = 0; i < fit_env->fdf.p; i++) {
-        result[i] = gsl_vector_get(fit_env->w->x, i);
+        result[i] = gsl_vector_get(x, i);
     }
 
     gsl_multifit_nlinear_free(fit_env->w);
@@ -223,7 +226,7 @@ static int gaussian_f(const gsl_vector *params, void *data, gsl_vector *f) {
     double x0 = gsl_vector_get(params, 1);
     double sigma = gsl_vector_get(params, 2);
 
-    if (sigma < 1e-10) return GSL_FAILURE;
+    if (fabs(sigma) < 1e-10) return GSL_FAILURE;
 
     for (int i = 0; i < n; i++) {
         double Yi = gaussian(x[i], A, x0, sigma);
@@ -241,7 +244,7 @@ static int gaussian_df(const gsl_vector *params, void *data, gsl_matrix *J) {
     double x0 = gsl_vector_get(params, 1);
     double sigma = gsl_vector_get(params, 2);
 
-    if (sigma < 1e-10) return GSL_FAILURE;
+    if (fabs(sigma) < 1e-10) return GSL_FAILURE;
 
     for (size_t i = 0; i < n; i++) {
         double xi = x[i];
@@ -288,6 +291,10 @@ double *fitGaussian(
 
 ////////// Erf //////////
 
+double mod_erf(double x, double A, double x0, double sigma, double offset) {
+    return A * erf((x - x0) / sigma) + offset;
+}
+
 static int erf_f(const gsl_vector *params, void *data, gsl_vector *f) {
     size_t n = ((data_t*)data)->n;
     double *x = ((data_t*)data)->x;
@@ -301,7 +308,7 @@ static int erf_f(const gsl_vector *params, void *data, gsl_vector *f) {
     if (sigma < 1e-10) return GSL_FAILURE;
 
     for (int i = 0; i < n; i++) {
-        double Yi = A * erf((x[i] - x0) / sigma) + offset;
+        double Yi = mod_erf(x[i], A, x0, sigma, offset);
         gsl_vector_set(f, i, Yi - y[i]);
     }
 
@@ -350,13 +357,113 @@ static void erf_callback(
     gsl_multifit_nlinear_rcond(&rcond, w);
 
     printf(
-        "iter %2zu: A = %.4f, x0 = %.4f, sigma = %.4f, cond(J) = %8.4f, "
-        "|f(x)| = %.4f\n",
+        "iter %2zu: A = %.4f, x0 = %.4f, sigma = %.4f, offset = %.4f, "
+        "cond(J) = %8.4f, |f(x)| = %.4f\n",
         iter, gsl_vector_get(x, 0), gsl_vector_get(x, 1),
-        gsl_vector_get(x, 2), 1.0 / rcond, gsl_blas_dnrm2(f)
+        gsl_vector_get(x, 2), gsl_vector_get(x, 3),
+        1.0 / rcond, gsl_blas_dnrm2(f)
     );
 }
 
 double *fitErf(double *x, double *y, size_t N, double init[4], int debug) {
     return fit(x, y, N, 4, init, &erf_f, &erf_df, &erf_callback, debug);
+}
+
+/////////f Combined Gauss + Erf //////////
+
+double comb(
+    double x,
+    double A_gauss,
+    double A_erf,
+    double x0,
+    double sigma,
+    double offset
+) {
+    return (
+        gaussian(x, A_gauss, x0, sigma) + mod_erf(x, A_erf, x0, sigma, offset)
+    );
+}
+
+static int comb_f(const gsl_vector *params, void *data, gsl_vector *f) {
+    size_t n = ((data_t*)data)->n;
+    double *x = ((data_t*)data)->x;
+    double *y = ((data_t*)data)->y;
+
+    double A_gaussian = gsl_vector_get(params, 0);
+    double A_erf = gsl_vector_get(params, 1);
+    double x0 = gsl_vector_get(params, 2);
+    double sigma = gsl_vector_get(params, 3);
+    double offset  = gsl_vector_get(params, 4);
+
+    if (fabs(sigma) < 1e-10) return GSL_FAILURE;
+
+    for (int i = 0; i < n; i++) {
+        double Yi = comb(x[i], A_gaussian, A_erf, x0, sigma, offset);
+        gsl_vector_set(f, i, Yi - y[i]);
+    }
+
+    return GSL_SUCCESS;
+}
+
+static int comb_df(const gsl_vector *params, void *data, gsl_matrix *J) {
+    size_t n = ((data_t*)data)->n;
+    double *x = ((data_t*)data)->x;
+    double *y = ((data_t*)data)->y;
+
+    double A_gauss = gsl_vector_get(params, 0);
+    double A_erf = gsl_vector_get(params, 1);
+    double x0 = gsl_vector_get(params, 2);
+    double sigma = gsl_vector_get(params, 3);
+    double offset  = gsl_vector_get(params, 4);
+
+    if (fabs(sigma) < 1e-10) return GSL_FAILURE;
+
+    for (size_t i = 0; i < n; i++) {
+        // Gaussian:
+        double xi = x[i];
+        double zi = (xi - x0) / sigma;
+        double ei_gauss = exp(-0.5 * zi * zi);
+        double ei_erf = exp(-zi * zi);
+        double erfi = erf(zi);
+        double c = 2.0 / sqrt(M_PI);
+
+        double df_dA_gauss = ei_gauss;
+        double df_dA_erf = erfi;
+        double df_dx0_gauss = (A_gauss / sigma) * ei_gauss * zi;
+        double df_dx0_erf = -c * A_erf * ei_erf / sigma;
+        double df_dsigma_gauss = (A_gauss / sigma) * ei_gauss * zi * zi;
+        double df_dsigma_erf = -c * A_erf * ei_erf * zi / sigma;
+        double df_doffset = 1;
+
+        gsl_matrix_set(J, i, 0, df_dA_gauss);
+        gsl_matrix_set(J, i, 1, df_dA_erf);
+        gsl_matrix_set(J, i, 2, df_dx0_gauss + df_dx0_erf);
+        gsl_matrix_set(J, i, 3, df_dsigma_gauss + df_dsigma_erf);
+        gsl_matrix_set(J, i, 4, df_doffset);
+    }
+
+    return GSL_SUCCESS;
+}
+
+static void comb_callback(
+    const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w
+) {
+    gsl_vector *f = gsl_multifit_nlinear_residual(w);
+    gsl_vector *x = gsl_multifit_nlinear_position(w);
+    double rcond;
+
+    /* compute reciprocal condition number of J(x) */
+    gsl_multifit_nlinear_rcond(&rcond, w);
+
+    printf(
+        "iter %2zu: A_gauss = %.4f, A_erf = %.4f, x0 = %.4f, sigma = %.4f, "
+        "offset = %.4f, cond(J) = %8.4f, |f(x)| = %.4f\n",
+        iter, gsl_vector_get(x, 0), gsl_vector_get(x, 1),
+        gsl_vector_get(x, 2), gsl_vector_get(x, 3), gsl_vector_get(x, 4),
+        1.0 / rcond, gsl_blas_dnrm2(f)
+    );
+}
+
+double *fitComb(double *x, double *y, size_t N, double init[5], int debug) {
+    return fit(x, y, N, 5, init, &comb_f, &comb_df, &comb_callback, debug);
 }

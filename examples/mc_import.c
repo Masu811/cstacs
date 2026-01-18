@@ -3,8 +3,7 @@
 extern int verbose;
 extern int debug;
 
-int main()
-{
+int main() {
     verbose = 1;
     debug = 0;
 

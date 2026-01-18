@@ -172,29 +172,3 @@ void showCoincidenceSpectrum(CoincidenceSpectrum *c, const int plot_width) {
 
     printf("%d\n", max_counts);
 }
-
-int main(int argc, char **argv) {
-    verbose = 1;
-    debug = 0;
-
-    if (argc < 2) {
-        printf("Usage: %s <filepath>\n", argv[0]);
-        return 1;
-    }
-
-    clock_t start, stop;
-    double cpu_time;
-
-    start = clock();
-
-    MeasurementCampaign *mc = importMeasurementCampaign(argv[1]);
-    evaluateMeasurementCampaign(mc);
-    freeMeasurementCampaign(mc);
-
-    stop = clock();
-    cpu_time = 1000 * ((double)(stop - start)) / CLOCKS_PER_SEC;
-
-    printf("CPU time used: %f ms\n", cpu_time);
-
-    return 0;
-}
