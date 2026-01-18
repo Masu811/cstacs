@@ -2,9 +2,9 @@
 
 
 ## Description
-CSTACS is a project that includes the re-implementation of the Python project [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs) in other programming languages, each bringing their own advantages and disadvantages.
+CSTACS is a project that includes the re-implementation of the Python project [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs) in C.
 
-Each language is implemented on its own branch. The main branch is written in C++. Currently featured languages are C++ and C. The addition of Rust is planned.
+The current plan is to write the core functionality in C and then add both a GUI and other language bindings on top.
 
 The sole purpose of this project is fun and learning. If the results are at some point in time any useful to anyone, great.
 
@@ -29,6 +29,18 @@ The sole purpose of this project is fun and learning. If the results are at some
 - [ ] Higher level analysis
   - [ ] (Depth) profiles
   - [ ] Ratio curves
+
+## Dependencies
+
+Debian, Ubuntu
+```
+sudo apt install libxml2-dev libgsl-dev
+```
+
+Arch
+```
+sudo pacman -Sy libxml2 gsl
+```
 
 ## Installation
 
@@ -71,7 +83,7 @@ Here `importMeasurementCampaign` imports the data from the folder into RAM and c
 
 `evaluateMeasurementCampaign` fits theory functions to the peaks and calculates line-shape parameters (currently only Gaussian fit to single spectra).
 
-`freeMeasurementCampaign` gives the occupied memory back to the system (google `memory leak` if you don't know what that why this is necessary).
+`freeMeasurementCampaign` gives the occupied memory back to the system.
 
 The flags `verbose` and `debug` can be used to get additional information during evaluation like peak parameters (verbose) or fit results (debug). Be careful though with larger measurement campaigns, as the output quickly becomes too much.
 
@@ -79,3 +91,29 @@ To compile this script, we need to link the STACS library with `-lstacs`
 ```
 gcc -o eval eval.c -lstacs
 ```
+
+## Unit Tests
+
+### Dependencies
+
+Debian / Ubuntu
+```
+sudo apt install libcriterion-dev
+```
+
+Arch
+```
+sudo pacman -Sy criterion
+```
+
+### Writing Tests
+
+Test source files are placed in the `/tests` folder. Any `.c` file will be included in the make process.
+
+### Running Tests
+
+While in the project root, type
+```
+make test
+```
+which will compile and run the unit tests.
