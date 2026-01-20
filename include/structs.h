@@ -23,6 +23,7 @@ typedef struct SingleSpectrum {
     } ecal;
 
     bool ecal_found;
+    bool ecal_corrected;
     double eres;
     unsigned long counts;
     double dcounts;
