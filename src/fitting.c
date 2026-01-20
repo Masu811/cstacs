@@ -14,7 +14,7 @@ const double xtol = 1e-6;
 const double gtol = 1e-6;
 const double ftol = 0.0;
 
-/////////// Fit Utilities //////////
+////////// Fit Utilities //////////
 
 /*
  * Print summary of the performed fit.
@@ -210,7 +210,7 @@ static double *fit(
     return postFit(&fit_env, debug);
 }
 
-/////////// 1D Gaussian //////////
+////////// 1D Gaussian //////////
 
 double gaussian(double x, double A, double x0, double sigma) {
     double z = (x - x0) / sigma;
@@ -369,7 +369,7 @@ double *fitErf(double *x, double *y, size_t N, double init[4], int debug) {
     return fit(x, y, N, 4, init, &erf_f, &erf_df, &erf_callback, debug);
 }
 
-/////////f Combined Gauss + Erf //////////
+////////// Combined Gauss + Erf //////////
 
 double comb(
     double x,
