@@ -14,6 +14,7 @@ typedef struct {
     int *spectrum;
     double *energies;
     int size;
+    int start_idx;
     double *corr_spectrum;
 } SpectrumView;
 
@@ -84,6 +85,10 @@ double *intToDouble(int *arr, const size_t n) {
     return x;
 }
 
+int searchsorted(double *ecal, double value) {
+    return (value - ecal[0]) / ecal[1];
+}
+
 int getPeakBndIdx(SingleSpectrum *s, double peak_width, int direction) {
     int peak_bnd_idx;
 
@@ -124,6 +129,7 @@ int extractPeak(SingleSpectrum *s, SpectrumView *peak, double peak_width) {
         printf("Extracted peak with %d channels width.\n", n_ch_in_peak);
     }
 
+    peak->start_idx = left_peak_bnd_idx;
     peak->spectrum = &s->spectrum[left_peak_bnd_idx];
     peak->energies = &s->energies[left_peak_bnd_idx];
     peak->size = n_ch_in_peak;
@@ -158,7 +164,7 @@ int checkPeakStd(SpectrumView *peak, char *detname) {
 
     std = sqrt(std / (peak->size - 1));
 
-    if (std < 1 || std == NAN) {
+    if (std < 1) {
         printf(
             "No peak found. Maybe your energy calibration is faulty? "
             "Could not analyze the single spectrum of detector "
@@ -171,6 +177,87 @@ int checkPeakStd(SpectrumView *peak, char *detname) {
     return 0;
 }
 
+int getArgmax(int *arr, int size) {
+    double max = 0;
+    int argmax = 0;
+
+    for (int i = 0; i < size; i++) {
+        if (arr[i] > max) {
+            max = arr[i],
+            argmax = i;
+        }
+    }
+
+    return argmax;
+}
+
+void dump(
+    char *filename,
+    char *headers[],
+    double *columns[],
+    int n_cols,
+    int n_rows
+) {
+    if (headers == NULL || columns == NULL || n_cols < 1 || n_rows < 1) return;
+
+    for (int i = 0; i < n_cols; i++) {
+        if (headers[i] == NULL || columns[i] == NULL) {
+            return;
+        }
+    }
+
+    FILE *f = fopen(filename, "w");
+
+    if (f == NULL) {
+        printf("Could not open file %s\n", filename);
+        return;
+    }
+
+    for (int i = 0; i < n_cols - 1; i++) {
+        fprintf(f, "%s,", headers[i]);
+    }
+    fprintf(f, "%s\n", headers[n_cols - 1]);
+
+    for (int i = 0; i < n_rows; i++) {
+        for (int j = 0; j < n_cols - 1; j++) {
+            fprintf(f, "%g,", columns[j][i]);
+        }
+        fprintf(f, "%g\n", columns[n_cols - 1][i]);
+    }
+
+    fclose(f);
+}
+
+void dumpFitResult(
+    double (func)(double, double*),
+    double *x,
+    double *y,
+    double *result,
+    int size,
+    char *filename
+) {
+    double *fit = (double*)malloc(size * sizeof(double));
+
+    if (fit == NULL) {
+        return;
+    }
+
+    for (int i = 0; i < size; i++) {
+        fit[i] = func(x[i], result);
+    }
+
+    double *columns[3] = {x, y, fit};
+    char *headers[3] = {"Energy", "Channel Data", "Best Fit"};
+
+    dump(filename, headers, columns, 3, size);
+
+    free(fit);
+}
+
+double gaussDebug(double x, double *result) {
+    return gaussian(x, result[0], result[1], result[2]);
+}
+
 // Return values:
 // 0: Success
 // 1: Failure
@@ -178,21 +265,12 @@ int fitPeakGauss(
     double fit_result[3],
     SpectrumView *peak
 ) {
-    double max = 0;
-    int argmax = 0;
-
-    for (int i = 0; i < peak->size; i++) {
-        if (peak->spectrum[i] > max) {
-            max = peak->spectrum[i],
-            argmax = i;
-        }
-    }
-
+    int argmax = getArgmax(peak->spectrum, peak->size);
+    double max = peak->corr_spectrum[argmax];
     double x0 = peak->energies[argmax];
-    double A_gauss = max;
 
-    double init[5] = {
-        A_gauss,
+    double init[3] = {
+        max,
         x0,
         1.5,
     };
@@ -214,26 +292,14 @@ int fitPeakGauss(
 
     if (debug) {
         puts("####");
-
-        double *fit = (double*)malloc(peak->size * sizeof(double));
-
-        if (fit == NULL) {
-            free(result);
-            return 0;
-        }
-
-        for (int i = 0; i < peak->size; i++) {
-            fit[i] = gaussian(
-                peak->energies[i], result[0], result[1], result[2]
-            );
-        }
-
-        double *columns[3] = {peak->energies, peak->corr_spectrum, fit};
-        char *headers[3] = {"Energy", "Channel Data", "Best Fit"};
-
-        // Dump data to file here
-
-        free(fit);
+        dumpFitResult(
+            gaussDebug,
+            peak->energies,
+            peak->corr_spectrum,
+            result,
+            peak->size,
+            "debug_Gaussian_fit.csv"
+        );
     }
 
     free(result);
@@ -286,6 +352,10 @@ int correctEcal(SingleSpectrum *s, SpectrumView *peak, int follow_peak_order) {
     return 0;
 }
 
+double combDebug(double x, double *result) {
+    return comb(x, result[0], result[1], result[2], result[3], result[4]);
+}
+
 // Return values:
 // 0: Success
 // 1: Failure
@@ -293,16 +363,8 @@ int fitPeakComb(
     double fit_result[5],
     SpectrumView *peak
 ) {
-    double max = 0;
-    int argmax = 0;
-
-    for (int i = 0; i < peak->size; i++) {
-        if (peak->spectrum[i] > max) {
-            max = peak->spectrum[i],
-            argmax = i;
-        }
-    }
-
+    int argmax = getArgmax(peak->spectrum, peak->size);
+    double max = peak->corr_spectrum[argmax];
     double x0 = peak->energies[argmax];
     double A_erf = peak->corr_spectrum[peak->size - 1] - peak->corr_spectrum[0];
     double offset = peak->corr_spectrum[peak->size - 1];
@@ -333,27 +395,14 @@ int fitPeakComb(
 
     if (debug) {
         puts("####");
-
-        double *fit = (double*)malloc(peak->size * sizeof(double));
-
-        if (fit == NULL) {
-            free(result);
-            return 0;
-        }
-
-        for (int i = 0; i < peak->size; i++) {
-            fit[i] = comb(
-                peak->energies[i],
-                result[0], result[1], result[2], result[3], result[4]
-            );
-        }
-
-        double *columns[3] = {peak->energies, peak->corr_spectrum, fit};
-        char *headers[3] = {"Energy", "Channel Data", "Best Fit"};
-
-        // Dump data to file here
-
-        free(fit);
+        dumpFitResult(
+            combDebug,
+            peak->energies,
+            peak->corr_spectrum,
+            result,
+            peak->size,
+            "debug_Gaussian_Erf_fit.csv"
+        );
     }
 
     free(result);
@@ -390,13 +439,45 @@ int correctPeak(SpectrumView *peak) {
     return 0;
 }
 
+double getDouble(void *value, int idx) {
+    return ((double*)value)[idx];
+}
+
+double getInt(void *value, int idx) {
+    return ((int*)value)[idx];
+}
+
 double integrateSpectrum(
-    void *s,
+    void *spectrum,
+    int offset,
+    double interpreter(void*, int),
+    double *ecal,
     double left_e,
     double right_e
 ) {
-    // TODO: implement
-    return 0;
+    double counts = 0;
+
+    int left_inner_idx, right_inner_idx;
+
+    left_inner_idx = searchsorted(ecal, left_e) + 1;
+    right_inner_idx = searchsorted(ecal, right_e);
+
+    left_inner_idx -= offset;
+    right_inner_idx -= offset;
+
+    for (int i = left_inner_idx; i < right_inner_idx; i++) {
+        counts += interpreter(spectrum, i);
+    }
+
+    counts += interpreter(spectrum, left_inner_idx - 1) * (
+        fmod(left_e, ecal[1]) / ecal[1]
+    );
+
+    counts += interpreter(spectrum, right_inner_idx) * (
+        fmod(left_e, ecal[1]) / ecal[1]
+    );
+
+    return counts;
 }
 
 void calcLineshapeParams(
@@ -410,27 +491,39 @@ void calcLineshapeParams(
 ) {
     double s_counts, w_counts, w_l_counts, w_r_counts, peak_counts, valley_counts;
 
+    peak_counts = 0;
+    for (int i = 0; i < peak->size; i++) {
+        peak_counts += peak->corr_spectrum[i];
+    }
+
     s_counts = integrateSpectrum(
-        &peak, M_POSITRON_keV - s_width, M_POSITRON_keV + s_width
+        &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
+        M_POSITRON_keV - s_width, M_POSITRON_keV + s_width
     );
 
     w_r_counts = integrateSpectrum(
-        &peak, M_POSITRON_keV - w_width - w_dist, M_POSITRON_keV - w_dist
+        &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
+        M_POSITRON_keV - w_width - w_dist, M_POSITRON_keV - w_dist
     );
     w_l_counts = w_rightonly ? 0 : integrateSpectrum(
-        &peak, M_POSITRON_keV - w_width - w_dist, M_POSITRON_keV - w_dist
+        &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
+        M_POSITRON_keV - w_width - w_dist, M_POSITRON_keV - w_dist
     );
     w_counts = w_r_counts + w_l_counts;
 
     valley_counts = integrateSpectrum(
-        s, v2p_bounds[0], v2p_bounds[1]
+        &s->spectrum, 0, getInt, s->ecal.values, v2p_bounds[0], v2p_bounds[1]
     );
 
+    s->peak_counts = peak_counts;
     s->s = s_counts / peak_counts;
     s->w = w_counts / peak_counts;
     s->v2p = valley_counts / peak_counts;
 
-    // TODO: uncertainties
+    s->dpeak_counts = sqrt(peak_counts);
+    s->ds = sqrt(s->s * (1 - s->s) / peak_counts);
+    s->dw = sqrt(s->w * (1 - s->w) / peak_counts);
+    s->dv2p = s->v2p * sqrt(1 / valley_counts + 1 / peak_counts);
 }
 
 /*
@@ -443,15 +536,15 @@ void calcLineshapeParams(
  */
 int analyze(
     SingleSpectrum *s,
-    const double s_width,
-    const double w_width,
-    const double w_dist,
-    const bool w_rightonly,
-    const double peak_width,
-    const double bg_frac,
-    const bool bg_corr,
+    double s_width,
+    double w_width,
+    double w_dist,
+    bool w_rightonly,
+    double peak_width,
+    double bg_frac,
+    bool bg_corr,
     double v2p_bounds[4],
-    const int follow_peak_order
+    unsigned int follow_peak_order
 ) {
     if (!singleComplete(s)) return 1;
 
@@ -459,54 +552,44 @@ int analyze(
         printf("Analyzing Single Spectrum of detector %s...\n", s->detname);
     }
 
-    int status;
-
     SpectrumView peak;
-    peak.corr_spectrum = (double*)malloc(peak.size * sizeof(double));
 
+    peak.corr_spectrum = (double*)malloc(peak.size * sizeof(double));
     if (peak.corr_spectrum == NULL) {
         return 3;
     }
 
-    status = extractPeak(s, &peak, peak_width);
-
-    if (status != 0) {
+    if (extractPeak(s, &peak, peak_width) != 0) {
         free(peak.corr_spectrum);
         return 1;
     }
 
-    status = checkPeakStd(&peak, s->detname);
-
-    if (status != 0) {
+    if (checkPeakStd(&peak, s->detname) != 0) {
         free(peak.corr_spectrum);
         return 2;
     }
 
-    if ((follow_peak_order == 0 || follow_peak_order == 1) && !s->ecal_corrected) {
-        status = correctEcal(s, &peak, follow_peak_order);
-
-        if (status != 0) {
+    if (follow_peak_order < 2 && !s->ecal_corrected) {
+        if (correctEcal(s, &peak, follow_peak_order) != 0) {
             free(peak.corr_spectrum);
             return 1;
         }
-
-        status = extractPeak(s, &peak, peak_width);
-
-        if (status != 0) {
+        if (extractPeak(s, &peak, peak_width) != 0) {
             free(peak.corr_spectrum);
             return 1;
         }
     }
 
-    if (bg_corr) {
-        status = correctPeak(&peak);
+    if (bg_corr && correctPeak(&peak) != 0) {
+        free(peak.corr_spectrum);
+        return 1;
     }
 
     calcLineshapeParams(
         s, &peak, s_width, w_width, w_dist, w_rightonly, v2p_bounds
     );
 
-    free(peak.corr_spectrum);
+    if (peak.corr_spectrum != NULL) free(peak.corr_spectrum);
 
     return 0;
 }

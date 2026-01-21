@@ -21,7 +21,7 @@ int analyze(
     const double bg_frac,
     const bool bg_corr,
     double v2p_bounds[4],
-    const int follow_peak_order
+    const unsigned int follow_peak_order
 );
 
 #endif
