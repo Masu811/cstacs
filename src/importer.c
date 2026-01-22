@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -11,9 +12,6 @@
 
 #include "../include/importer.h"
 #include "../include/structs.h"
-
-extern int verbose;
-extern int debug;
 
 /*
  * Get the first child of metadata item 'node' whose key equals 'key'.
@@ -161,7 +159,7 @@ static void freeMetadata(metadata_item *metadata) {
  * Load string 'spectrum' into int array 's->spectrum'.
  * 'spectrum' is expected to be a string of ints separated by spaces.
  */
-static void spectrumStrToArr(char *spectrum, SingleSpectrum *s) {
+static void spectrumStrToArr(char *spectrum, SingleSpectrum *s, bool debug) {
     if (spectrum == NULL || s == NULL) return;
 
     s->spectrum_size = 0;
@@ -240,8 +238,9 @@ char *concatPath(char *directory, char *filename) {
 }
 
 /* Assemble DopplerMeasurement from metadata. */
-static DopplerMeasurement *
-metadataToDoppler(metadata_item *metadata, char *directory, char *filename) {
+static DopplerMeasurement *metadataToDoppler(
+    metadata_item *metadata, char *directory, char *filename, bool debug
+) {
     if (metadata == NULL) return NULL;
 
     DopplerMeasurement *dm =
@@ -285,7 +284,7 @@ metadataToDoppler(metadata_item *metadata, char *directory, char *filename) {
                 for (metadata_item *attr = entry->children; attr;
                      attr = attr->next) {
                     if (strcmp(attr->key, "ChannelData") == 0) {
-                        spectrumStrToArr(attr->value, dm->singles[i]);
+                        spectrumStrToArr(attr->value, dm->singles[i], debug);
                     } else if (strcmp(
                                    attr->key, "radDetectorInformationReference"
                                ) == 0) {
@@ -405,6 +404,9 @@ void printDopplerMeasurement(DopplerMeasurement *dm) {
                 );
             }
             printf("\t\t\tCounts: %lld\n", dm->singles[i]->counts);
+            printf("\t\t\tS: %f +/- %f\n", dm->singles[i]->s, dm->singles[i]->ds);
+            printf("\t\t\tW: %f +/- %f\n", dm->singles[i]->w, dm->singles[i]->dw);
+            printf("\t\t\tV/P: %f +/- %f\n", dm->singles[i]->v2p, dm->singles[i]->dv2p);
         }
     }
 
@@ -435,7 +437,7 @@ void printDopplerMeasurement(DopplerMeasurement *dm) {
 /*
  * Assemble DopplerMeasurement from n42 file.
  */
-DopplerMeasurement *import_n42(char *directory, char *filename) {
+DopplerMeasurement *import_n42(char *directory, char *filename, bool debug) {
     char *filepath = concatPath(directory, filename);
     xmlDocPtr doc = xmlParseFile(filepath);
     free(filepath);
@@ -452,7 +454,9 @@ DopplerMeasurement *import_n42(char *directory, char *filename) {
     xmlFreeDoc(doc);
     xmlCleanupParser();
 
-    DopplerMeasurement *dm = metadataToDoppler(metadata, directory, filename);
+    DopplerMeasurement *dm = metadataToDoppler(
+        metadata, directory, filename, debug
+    );
 
     if (debug) printDopplerMeasurement(dm);
 

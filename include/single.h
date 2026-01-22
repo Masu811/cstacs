@@ -1,15 +1,13 @@
 #ifndef SINGLE_H
 #define SINGLE_H
 
+#include <stdbool.h>
+
 #include "structs.h"
 
 #define M_POSITRON_keV 510.99895
 
 static int calcEnergies(SingleSpectrum *s);
-
-void plot(
-    char *headers[], double *columns[], const int n_cols, const int n_rows
-);
 
 int analyze(
     SingleSpectrum *s,
@@ -21,7 +19,9 @@ int analyze(
     const double bg_frac,
     const bool bg_corr,
     double v2p_bounds[4],
-    const unsigned int follow_peak_order
+    const unsigned int follow_peak_order,
+    bool verbose,
+    bool debug
 );
 
 #endif

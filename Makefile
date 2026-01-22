@@ -19,7 +19,8 @@ include: $(HEADER_DIR)/$(TARGET).h $(BUILD_DIR)/lib$(TARGET).so
 	sudo mkdir -p $(INCLUDE_DIR)/$(TARGET)
 	sudo install -m 0644 $(HEAD) $(INCLUDE_DIR)/$(TARGET)
 	make clean
-	@echo "\nThe STACS shared library is now ready for use"
+	@echo ""
+	@echo "The STACS shared library is now ready for use"
 
 $(BUILD_DIR)/lib$(TARGET).so: $(SRC) $(HEAD)
 	mkdir -p $(BUILD_DIR)

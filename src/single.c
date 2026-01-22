@@ -7,9 +7,6 @@
 #include "../include/single.h"
 #include "../include/structs.h"
 
-extern int verbose;
-extern int debug;
-
 typedef struct {
     int *spectrum;
     double *energies;
@@ -111,7 +108,9 @@ int getPeakBndIdx(SingleSpectrum *s, double peak_width, int direction) {
 // Return codes:
 // 0: Success
 // 1: Failure
-int extractPeak(SingleSpectrum *s, SpectrumView *peak, double peak_width) {
+int extractPeak(
+    SingleSpectrum *s, SpectrumView *peak, double peak_width, bool verbose
+) {
     if (peak_width == 0) {
         return 1;
     }
@@ -263,7 +262,8 @@ double gaussDebug(double x, double *result) {
 // 1: Failure
 int fitPeakGauss(
     double fit_result[3],
-    SpectrumView *peak
+    SpectrumView *peak,
+    bool debug
 ) {
     int argmax = getArgmax(peak->spectrum, peak->size);
     double max = peak->corr_spectrum[argmax];
@@ -309,10 +309,16 @@ int fitPeakGauss(
 // Return values:
 // 0: Success
 // 1: Failure
-int correctEcal(SingleSpectrum *s, SpectrumView *peak, int follow_peak_order) {
+int correctEcal(
+    SingleSpectrum *s,
+    SpectrumView *peak,
+    int follow_peak_order,
+    bool verbose,
+    bool debug
+) {
     double peak_fit_result[3];
 
-    int fit_status = fitPeakGauss(peak_fit_result, peak);
+    int fit_status = fitPeakGauss(peak_fit_result, peak, debug);
 
     if (fit_status != 0) {
         printf("Gaussian Fit of spectrum failed\n");
@@ -322,20 +328,20 @@ int correctEcal(SingleSpectrum *s, SpectrumView *peak, int follow_peak_order) {
     double c0 = s->ecal.values[0], c1 = s->ecal.values[1];
 
     if (follow_peak_order == 0) {
-        s->ecal.values[0] -= peak_fit_result[2] - M_POSITRON_keV;
+        s->ecal.values[0] -= peak_fit_result[1] - M_POSITRON_keV;
         if (verbose) {
             printf(
-                "Corrected 0th order ecal coefficient: %f -> %f",
+                "Corrected 0th order ecal coefficient: %f -> %f\n",
                 c0, s->ecal.values[0]
             );
         }
     } else {
         s->ecal.values[1] *= (
-            (M_POSITRON_keV - c0) / (peak_fit_result[2] - c0)
+            (M_POSITRON_keV - c0) / (peak_fit_result[1] - c0)
         );
         if (verbose) {
             printf(
-                "Corrected 1st order ecal coefficient: %f -> %f",
+                "Corrected 1st order ecal coefficient: %f -> %f\n",
                 c1, s->ecal.values[1]
             );
         }
@@ -361,7 +367,8 @@ double combDebug(double x, double *result) {
 // 1: Failure
 int fitPeakComb(
     double fit_result[5],
-    SpectrumView *peak
+    SpectrumView *peak,
+    bool debug
 ) {
     int argmax = getArgmax(peak->spectrum, peak->size);
     double max = peak->corr_spectrum[argmax];
@@ -409,9 +416,9 @@ int fitPeakComb(
     return 0;
 }
 
-int correctPeak(SpectrumView *peak) {
+int correctPeak(SpectrumView *peak, bool verbose, bool debug) {
     double peak_fit_result[5];
-    if (fitPeakComb(peak_fit_result, peak) != 0) {
+    if (fitPeakComb(peak_fit_result, peak, debug) != 0) {
         printf("Could not fit peak\n");
         return 2;
     }
@@ -489,41 +496,54 @@ void calcLineshapeParams(
     bool w_rightonly,
     double v2p_bounds[4]
 ) {
-    double s_counts, w_counts, w_l_counts, w_r_counts, peak_counts, valley_counts;
+    double counts, peak_counts;
+
+    for (int i = 0; i < s->spectrum_size; i++) {
+        counts += s->spectrum[i];
+    }
+
+    s->counts = counts;
+    s->dcounts = sqrt(s->counts);
 
     peak_counts = 0;
     for (int i = 0; i < peak->size; i++) {
         peak_counts += peak->corr_spectrum[i];
     }
 
-    s_counts = integrateSpectrum(
+    s->peak_counts = peak_counts;
+    s->dpeak_counts = sqrt(peak_counts);
+
+    double s_area, w_area, w_l_area, w_r_area, valley_area, v_peak_area;
+
+    s_area = integrateSpectrum(
         &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
         M_POSITRON_keV - s_width, M_POSITRON_keV + s_width
     );
 
-    w_r_counts = integrateSpectrum(
+    w_r_area = integrateSpectrum(
+        &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
+        M_POSITRON_keV + w_dist, M_POSITRON_keV + w_width + w_dist
+    );
+    w_l_area = w_rightonly ? 0 : integrateSpectrum(
         &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
         M_POSITRON_keV - w_width - w_dist, M_POSITRON_keV - w_dist
     );
-    w_l_counts = w_rightonly ? 0 : integrateSpectrum(
-        &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
-        M_POSITRON_keV - w_width - w_dist, M_POSITRON_keV - w_dist
-    );
-    w_counts = w_r_counts + w_l_counts;
+    w_area = w_r_area + w_l_area;
 
-    valley_counts = integrateSpectrum(
+    valley_area = integrateSpectrum(
         &s->spectrum, 0, getInt, s->ecal.values, v2p_bounds[0], v2p_bounds[1]
     );
+    v_peak_area = integrateSpectrum(
+        &s->spectrum, 0, getInt, s->ecal.values, v2p_bounds[2], v2p_bounds[3]
+    );
 
-    s->peak_counts = peak_counts;
-    s->s = s_counts / peak_counts;
-    s->w = w_counts / peak_counts;
-    s->v2p = valley_counts / peak_counts;
+    s->s = s_area / peak_counts;
+    s->w = w_area / peak_counts;
+    s->v2p = valley_area / v_peak_area;
 
-    s->dpeak_counts = sqrt(peak_counts);
     s->ds = sqrt(s->s * (1 - s->s) / peak_counts);
     s->dw = sqrt(s->w * (1 - s->w) / peak_counts);
-    s->dv2p = s->v2p * sqrt(1 / valley_counts + 1 / peak_counts);
+    s->dv2p = s->v2p * sqrt(1 / valley_area + 1 / v_peak_area);
 }
 
 /*
@@ -544,7 +564,9 @@ int analyze(
     double bg_frac,
     bool bg_corr,
     double v2p_bounds[4],
-    unsigned int follow_peak_order
+    unsigned int follow_peak_order,
+    bool verbose,
+    bool debug
 ) {
     if (!singleComplete(s)) return 1;
 
@@ -554,12 +576,12 @@ int analyze(
 
     SpectrumView peak;
 
-    peak.corr_spectrum = (double*)malloc(peak.size * sizeof(double));
+    peak.corr_spectrum = (double*)malloc(s->spectrum_size * sizeof(double));
     if (peak.corr_spectrum == NULL) {
         return 3;
     }
 
-    if (extractPeak(s, &peak, peak_width) != 0) {
+    if (extractPeak(s, &peak, peak_width, verbose) != 0) {
         free(peak.corr_spectrum);
         return 1;
     }
@@ -570,17 +592,17 @@ int analyze(
     }
 
     if (follow_peak_order < 2 && !s->ecal_corrected) {
-        if (correctEcal(s, &peak, follow_peak_order) != 0) {
+        if (correctEcal(s, &peak, follow_peak_order, verbose, debug) != 0) {
             free(peak.corr_spectrum);
             return 1;
         }
-        if (extractPeak(s, &peak, peak_width) != 0) {
+        if (extractPeak(s, &peak, peak_width, verbose) != 0) {
             free(peak.corr_spectrum);
             return 1;
         }
     }
 
-    if (bg_corr && correctPeak(&peak) != 0) {
+    if (bg_corr && correctPeak(&peak, verbose, debug) != 0) {
         free(peak.corr_spectrum);
         return 1;
     }

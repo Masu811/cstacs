@@ -9,24 +9,23 @@
 #include "../include/single.h"
 #include "../include/structs.h"
 
-int verbose;
-int debug;
-
 static void progress(const int done, const int total, const int bar_length) {
     printf("[");
 
     float fraction = (float)done / total;
 
-    for (int i = 0; i < (int)(fraction * bar_length); i++)
+    for (int i = 0; i < (int)(fraction * bar_length); i++) {
         printf("#");
+    }
 
-    for (int i = 0; i < (int)((1 - fraction) * bar_length); i++)
+    for (int i = 0; i < (int)((1 - fraction) * bar_length); i++) {
         printf(" ");
+    }
 
     printf("] %d / %d (%.1f %%)", done, total, 100 * fraction);
 }
 
-MeasurementCampaign *importMeasurementCampaign(char *directory) {
+MeasurementCampaign *importMeasurementCampaign(char *directory, bool debug) {
     MeasurementCampaign *mc =
         ((MeasurementCampaign *)calloc(1, sizeof(MeasurementCampaign)));
     mc->measurements =
@@ -55,7 +54,9 @@ MeasurementCampaign *importMeasurementCampaign(char *directory) {
     while ((entry = readdir(dir)) != NULL) {
         if (strstr(entry->d_name, ".n42\0") != NULL) {
             int i = mc->n_measurements;
-            DopplerMeasurement *dm = import_n42(directory, entry->d_name);
+            DopplerMeasurement *dm = import_n42(
+                directory, entry->d_name, debug
+            );
             mc->measurements = ((DopplerMeasurement **)realloc(
                 mc->measurements, (i + 1) * sizeof(DopplerMeasurement *)
             ));
@@ -73,21 +74,39 @@ MeasurementCampaign *importMeasurementCampaign(char *directory) {
     return mc;
 }
 
-void evaluateSingleSpectrum(SingleSpectrum *s) {
+void evaluateSingleSpectrum(
+    SingleSpectrum *s,
+    double s_width,
+    double w_width,
+    double w_dist,
+    bool w_rightonly,
+    double peak_width,
+    double bg_frac,
+    bool bg_corr,
+    double v2p_bounds[4],
+    unsigned int follow_peak_order,
+    bool verbose,
+    bool debug
+) {
     if (s == NULL) {
         puts("Cannot analyze uninitialized Single Spectrum");
         return;
     }
 
-    for (int i = 0; i < s->spectrum_size; i++) {
-        s->counts = s->counts + s->spectrum[i];
-    }
-
-    s->dcounts = sqrt(s->counts);
-
-    double v2p_bounds[] = {450, 500, 506, 516};
-
-    analyze(s, 1.1, 1.0, 3.0, 0, 60.0, 0, 0, v2p_bounds, 0);
+    analyze(
+        s,
+        s_width,
+        w_width,
+        w_dist,
+        w_rightonly,
+        peak_width,
+        bg_frac,
+        bg_corr,
+        v2p_bounds,
+        follow_peak_order,
+        verbose,
+        debug
+    );
 }
 
 void evaluateCoincidenceSpectrum(CoincidenceSpectrum *c) {
@@ -96,26 +115,68 @@ void evaluateCoincidenceSpectrum(CoincidenceSpectrum *c) {
         return;
     }
 
-    for (int i = 0; i < c->width * c->height; i++)
+    for (int i = 0; i < c->width * c->height; i++) {
         c->counts = c->counts + c->spectrum[i];
+    }
 
     c->dcounts = sqrt(c->counts);
 }
 
-void evaluateDopplerMeasurement(DopplerMeasurement *dm) {
+void evaluateDopplerMeasurement(
+    DopplerMeasurement *dm,
+    double s_width,
+    double w_width,
+    double w_dist,
+    bool w_rightonly,
+    double peak_width,
+    double bg_frac,
+    bool bg_corr,
+    double v2p_bounds[4],
+    unsigned int follow_peak_order,
+    bool verbose,
+    bool debug
+) {
     if (dm == NULL) {
         puts("Cannot analyze uninitialized Doppler Measurement");
         return;
     }
 
-    for (int i = 0; i < dm->n_singles; i++)
-        evaluateSingleSpectrum(dm->singles[i]);
+    for (int i = 0; i < dm->n_singles; i++) {
+        evaluateSingleSpectrum(
+            dm->singles[i],
+            s_width,
+            w_width,
+            w_dist,
+            w_rightonly,
+            peak_width,
+            bg_frac,
+            bg_corr,
+            v2p_bounds,
+            follow_peak_order,
+            verbose,
+            debug
+        );
+    }
 
-    for (int i = 0; i < dm->n_coinc; i++)
+    for (int i = 0; i < dm->n_coinc; i++) {
         evaluateCoincidenceSpectrum(dm->coinc[i]);
+    }
 }
 
-void evaluateMeasurementCampaign(MeasurementCampaign *mc) {
+void evaluateMeasurementCampaign(
+    MeasurementCampaign *mc,
+    double s_width,
+    double w_width,
+    double w_dist,
+    bool w_rightonly,
+    double peak_width,
+    double bg_frac,
+    bool bg_corr,
+    double v2p_bounds[4],
+    unsigned int follow_peak_order,
+    bool verbose,
+    bool debug
+) {
     if (mc == NULL) {
         puts("Cannot analyze uninitialized Measurement Campaign");
         return;
@@ -124,7 +185,20 @@ void evaluateMeasurementCampaign(MeasurementCampaign *mc) {
     puts("Analyzing Measurement Campaign...");
 
     for (int i = 0; i < mc->n_measurements; i++)
-        evaluateDopplerMeasurement(mc->measurements[i]);
+        evaluateDopplerMeasurement(
+            mc->measurements[i],
+            s_width,
+            w_width,
+            w_dist,
+            w_rightonly,
+            peak_width,
+            bg_frac,
+            bg_corr,
+            v2p_bounds,
+            follow_peak_order,
+            verbose,
+            debug
+        );
 }
 
 void printMeasurementCampaign(MeasurementCampaign *mc) {
@@ -133,8 +207,9 @@ void printMeasurementCampaign(MeasurementCampaign *mc) {
         mc->n_measurements
     );
 
-    for (int i = 0; i < mc->n_measurements; i++)
+    for (int i = 0; i < mc->n_measurements; i++) {
         printDopplerMeasurement(mc->measurements[i]);
+    }
 }
 
 void freeMeasurementCampaign(MeasurementCampaign *mc) {

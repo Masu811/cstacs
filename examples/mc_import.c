@@ -1,15 +1,14 @@
 #include <stacs/stacs.h>
 
-extern int verbose;
-extern int debug;
-
 int main() {
-    verbose = 1;
-    debug = 0;
+    MeasurementCampaign *mc = importMeasurementCampaign("data/", 0);
 
-    MeasurementCampaign *mc = importMeasurementCampaign("testdata/");
+    double v2p_bounds[4] = {400, 500, 506, 516};
+
+    evaluateMeasurementCampaign(
+        mc, 1.1, 1.0, 3.0, 0, 60.0, 0, 0, v2p_bounds, 1, 1, 0
+    );
     printMeasurementCampaign(mc);
-    evaluateMeasurementCampaign(mc);
     freeMeasurementCampaign(mc);
 
     return 0;
