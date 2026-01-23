@@ -48,8 +48,15 @@ unit-test-debian:
         - apt-get update
         - apt-get install -y sudo libxml2-dev libgsl-dev libcriterion-dev
         - echo "Running Debian tests"
+        - cd tests
         - make test
         - echo "Debian tests completed"
+        - echo "Running Debian examples"
+        - cd ..
+        - make
+        - cd examples
+        - make run
+        - echo "Debian examples ran successfully"
 
 unit-test-arch:
     stage: test
@@ -58,6 +65,13 @@ unit-test-arch:
         - echo "Building Arch tests"
         - pacman -Syu --noconfirm archlinux-keyring
         - pacman -Sy --noconfirm base-devel gsl criterion
-        - echo "Running Arch tests"
+        - echo "Running Arch unit tests"
+        - cd tests
         - make test
-        - echo "Arch tests completed"
+        - echo "Arch unit tests completed"
+        - echo "Running Arch examples"
+        - cd ..
+        - make
+        - cd examples
+        - make run
+        - echo "Arch examples ran successfully"

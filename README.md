@@ -16,11 +16,11 @@ The sole purpose of this project is fun and learning. If the results are at some
   - [x] Spectra import & type conversion
   - [x] Reference resolution (energy calibration, detector names)
 - [ ] Spectra analysis
-  - [ ] Single Spectra
+  - [x] Single Spectra
     - [x] Peak parameters via Gaussian fit
     - [x] Peak extraction
-    - [ ] Background subtraction
-    - [ ] Line shape parameter calculation
+    - [x] Background subtraction
+    - [x] Line shape parameter calculation
   - [ ] Coincidence Spectra
     - [ ] Peak parameters via 2D-Gaussian fit
     - [ ] Background subtraction
@@ -61,17 +61,15 @@ Assume we have a folder `measurement` filled with `.n42` files and corresponding
 ```
 #include <stacs/stacs.h>
 
-extern int verbose;
-extern int debug;
+int main() {
+    MeasurementCampaign *mc = importMeasurementCampaign("data/", 0);
 
-int main()
-{
-    verbose = 1;
-    debug = 0;
+    double v2p_bounds[4] = {400, 500, 506, 516};
 
-    MeasurementCampaign *mc = importMeasurementCampaign("measurement/");
+    evaluateMeasurementCampaign(
+        mc, 1.1, 1.0, 3.0, 0, 60.0, 0, 1, v2p_bounds, 1, 1, 1
+    );
     printMeasurementCampaign(mc);
-    evaluateMeasurementCampaign(mc);
     freeMeasurementCampaign(mc);
 
     return 0;
@@ -79,18 +77,26 @@ int main()
 ```
 Here `importMeasurementCampaign` imports the data from the folder into RAM and computes things like total counts and energy of channels.
 
-`printMeasurementCampaign` prints a summary of information about each Doppler measurement, namely filename and how many single and coincidence spectra it contains, and for each of those things like number of channels (per axis), filename, detector (pair) name, energy calibration and counts.
-
 `evaluateMeasurementCampaign` fits theory functions to the peaks and calculates line-shape parameters (currently only Gaussian fit to single spectra).
 
-`freeMeasurementCampaign` gives the occupied memory back to the system.
+`printMeasurementCampaign` prints a summary of information about each Doppler measurement, namely filename and how many single and coincidence spectra it contains, and for each of those things like number of channels (per axis), filename, detector (pair) name, energy calibration and counts.
 
-The flags `verbose` and `debug` can be used to get additional information during evaluation like peak parameters (verbose) or fit results (debug). Be careful though with larger measurement campaigns, as the output quickly becomes too much.
+`freeMeasurementCampaign` gives the occupied memory back to the system.
 
 To compile this script, we need to link the STACS library with `-lstacs`
 ```
 gcc -o eval eval.c -lstacs
 ```
+
+This example can be found in the `examples/` directory. While in `examples/`, type
+```
+make
+```
+to compile the example and
+```
+make run
+```
+to compile and run it.
 
 ## Unit Tests
 
@@ -112,8 +118,12 @@ Test source files are placed in the `/tests` folder. Any `.c` file will be inclu
 
 ### Running Tests
 
-While in the project root, type
+While in `tests/`, type
+```
+make
+```
+to compile, and 
 ```
 make test
 ```
-which will compile and run the unit tests.
+to comile and run the unit tests.
