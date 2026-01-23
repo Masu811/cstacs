@@ -46,10 +46,10 @@ static void printFitReport(FitEnv *fit_env) {
 
     fprintf(stderr, "chisq/dof = %g\n", fit_env->chisq / dof);
 
-    for (int i = 0; i < fit_env->fdf.p; i++) {
+    for (size_t i = 0; i < fit_env->fdf.p; i++) {
         fprintf(
             stderr,
-            "x[%d] = %.5f +/- %.5f\n",
+            "x[%zu] = %.5f +/- %.5f\n",
             i,
             gsl_vector_get(fit_env->w->x, i),
             c * sqrt(gsl_matrix_get(fit_env->covar, i, i))
@@ -165,7 +165,7 @@ static double *postFit(FitEnv *fit_env, int debug) {
 
     gsl_vector *x = gsl_multifit_nlinear_position(fit_env->w);
 
-    for (int i = 0; i < fit_env->fdf.p; i++) {
+    for (size_t i = 0; i < fit_env->fdf.p; i++) {
         result[i] = gsl_vector_get(x, i);
     }
 
@@ -228,7 +228,7 @@ static int gaussian_f(const gsl_vector *params, void *data, gsl_vector *f) {
 
     if (fabs(sigma) < 1e-10) return GSL_FAILURE;
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         double Yi = gaussian(x[i], A, x0, sigma);
         gsl_vector_set(f, i, Yi - y[i]);
     }
@@ -266,6 +266,7 @@ static int gaussian_df(const gsl_vector *params, void *data, gsl_matrix *J) {
 static void gaussian_callback(
     const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w
 ) {
+    (void)params;
     gsl_vector *f = gsl_multifit_nlinear_residual(w);
     gsl_vector *x = gsl_multifit_nlinear_position(w);
     double rcond;
@@ -307,7 +308,7 @@ static int erf_f(const gsl_vector *params, void *data, gsl_vector *f) {
 
     if (sigma < 1e-10) return GSL_FAILURE;
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         double Yi = mod_erf(x[i], A, x0, sigma, offset);
         gsl_vector_set(f, i, Yi - y[i]);
     }
@@ -349,6 +350,7 @@ static int erf_df(const gsl_vector *params, void *data, gsl_matrix *J) {
 static void erf_callback(
     const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w
 ) {
+    (void)params;
     gsl_vector *f = gsl_multifit_nlinear_residual(w);
     gsl_vector *x = gsl_multifit_nlinear_position(w);
     double rcond;
@@ -397,7 +399,7 @@ static int comb_f(const gsl_vector *params, void *data, gsl_vector *f) {
 
     if (fabs(sigma) < 1e-10) return GSL_FAILURE;
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         double Yi = comb(x[i], A_gaussian, A_erf, x0, sigma, offset);
         gsl_vector_set(f, i, Yi - y[i]);
     }
@@ -408,13 +410,11 @@ static int comb_f(const gsl_vector *params, void *data, gsl_vector *f) {
 static int comb_df(const gsl_vector *params, void *data, gsl_matrix *J) {
     size_t n = ((data_t*)data)->n;
     double *x = ((data_t*)data)->x;
-    double *y = ((data_t*)data)->y;
 
     double A_gauss = gsl_vector_get(params, 0);
     double A_erf = gsl_vector_get(params, 1);
     double x0 = gsl_vector_get(params, 2);
     double sigma = gsl_vector_get(params, 3);
-    double offset  = gsl_vector_get(params, 4);
 
     if (fabs(sigma) < 1e-10) return GSL_FAILURE;
 
@@ -448,6 +448,7 @@ static int comb_df(const gsl_vector *params, void *data, gsl_matrix *J) {
 static void comb_callback(
     const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w
 ) {
+    (void)params;
     gsl_vector *f = gsl_multifit_nlinear_residual(w);
     gsl_vector *x = gsl_multifit_nlinear_position(w);
     double rcond;

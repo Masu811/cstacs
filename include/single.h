@@ -7,7 +7,7 @@
 
 #define M_POSITRON_keV 510.99895
 
-static int calcEnergies(SingleSpectrum *s);
+int calcEnergies(SingleSpectrum *s);
 
 int analyze(
     SingleSpectrum *s,
@@ -18,10 +18,10 @@ int analyze(
     const double peak_width,
     const double bg_frac,
     const bool bg_corr,
-    double v2p_bounds[4],
+    const double v2p_bounds[4],
     const unsigned int follow_peak_order,
-    bool verbose,
-    bool debug
+    const bool verbose,
+    const bool debug
 );
 
 #endif

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O3
+CFLAGS = -O3 -Wall -Wextra -Wpedantic
 LIBS = -I $(HEADER_DIR) -I/usr/include/libxml2 -lm -lxml2 -lgsl -lgslcblas
 
 TARGET = stacs
@@ -8,11 +8,9 @@ HEADER_DIR = include
 BUILD_DIR = build
 INCLUDE_DIR = /usr/include
 LIB_DIR = /usr/lib
-TEST_DIR = tests
 
 SRC = $(wildcard $(SRC_DIR)/*.c)
 HEAD = $(wildcard $(HEADER_DIR)/*.h)
-TEST = $(wildcard $(TEST_DIR)/*.c)
 
 include: $(HEADER_DIR)/$(TARGET).h $(BUILD_DIR)/lib$(TARGET).so
 	sudo install -m 0755 $(BUILD_DIR)/lib$(TARGET).so $(LIB_DIR)
@@ -32,10 +30,5 @@ clean:
 uninstall:
 	sudo rm -rf $(INCLUDE_DIR)/$(TARGET)
 	sudo rm -f $(LIB_DIR)/lib$(TARGET).so
-
-test: $(SRC) $(HEAD) $(TEST)
-	$(CC) -O0 -fsanitize=address,undefined -o $(TEST_DIR)/$@ \
-	    $(SRC) $(TEST) $(LIBS) -lcriterion
-	./tests/test
 
 .PHONY: include clean uninstall

@@ -6,7 +6,7 @@ int main() {
     double v2p_bounds[4] = {400, 500, 506, 516};
 
     evaluateMeasurementCampaign(
-        mc, 1.1, 1.0, 3.0, 0, 60.0, 0, 0, v2p_bounds, 1, 1, 0
+        mc, 1.1, 1.0, 3.0, 0, 60.0, 0, 1, v2p_bounds, 1, 1, 1
     );
     printMeasurementCampaign(mc);
     freeMeasurementCampaign(mc);

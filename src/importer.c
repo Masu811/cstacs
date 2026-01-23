@@ -403,7 +403,8 @@ void printDopplerMeasurement(DopplerMeasurement *dm) {
                     dm->singles[i]->ecal.values[1]
                 );
             }
-            printf("\t\t\tCounts: %lld\n", dm->singles[i]->counts);
+            printf("\t\t\tCounts: %lu\n", dm->singles[i]->counts);
+            printf("\t\t\tPeak Counts: %lu\n", dm->singles[i]->peak_counts);
             printf("\t\t\tS: %f +/- %f\n", dm->singles[i]->s, dm->singles[i]->ds);
             printf("\t\t\tW: %f +/- %f\n", dm->singles[i]->w, dm->singles[i]->dw);
             printf("\t\t\tV/P: %f +/- %f\n", dm->singles[i]->v2p, dm->singles[i]->dv2p);
@@ -429,7 +430,7 @@ void printDopplerMeasurement(DopplerMeasurement *dm) {
             printf("\t\t\tFilename: %s\n", dm->coinc[i]->filename);
             printf("\t\t\tParentname: %s\n", dm->coinc[i]->parentname);
             printf("\t\t\tDetectorpair: %s\n", dm->coinc[i]->detpair);
-            printf("\t\t\tCounts: %lld\n", dm->coinc[i]->counts);
+            printf("\t\t\tCounts: %lu\n", dm->coinc[i]->counts);
         }
     }
 }

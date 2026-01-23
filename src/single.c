@@ -15,6 +15,8 @@ typedef struct {
     double *corr_spectrum;
 } SpectrumView;
 
+typedef double (*parser_t)(const void*, int);
+
 /*
  * Calculate energies of the channels of SingleSpectrum s with its energy
  * calibration.
@@ -22,7 +24,7 @@ typedef struct {
  * 0: Success
  * 1: Failure (Missing ecal or malloc fail)
  */
-static int calcEnergies(SingleSpectrum *s) {
+int calcEnergies(SingleSpectrum *s) {
     if (s == NULL) {
         puts("Cannot calculate energies of uninitialized Single Spectrum");
         return 1;
@@ -72,21 +74,29 @@ int singleComplete(SingleSpectrum *s) {
     return 1;
 }
 
-double *intToDouble(int *arr, const size_t n) {
+static double *intToDouble(const int *arr, size_t n) {
     double *x = (double*)malloc(n * sizeof(double));
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         x[i] = (double)arr[i];
     }
 
     return x;
 }
 
-int searchsorted(double *ecal, double value) {
-    return (value - ecal[0]) / ecal[1];
+static int searchlinear(
+    const double *arr, size_t size, const double *ecal, double value
+) {
+    if (arr[0] > value) return 0;
+    if (arr[size-1] < value) return size;
+    return (value - ecal[0]) / ecal[1] + 1;
 }
 
-int getPeakBndIdx(SingleSpectrum *s, double peak_width, int direction) {
+static int getPeakBndIdx(
+    const SingleSpectrum *s,
+    double peak_width,
+    int direction
+) {
     int peak_bnd_idx;
 
     double h = direction * peak_width / 2;
@@ -108,8 +118,11 @@ int getPeakBndIdx(SingleSpectrum *s, double peak_width, int direction) {
 // Return codes:
 // 0: Success
 // 1: Failure
-int extractPeak(
-    SingleSpectrum *s, SpectrumView *peak, double peak_width, bool verbose
+static int extractPeak(
+    const SingleSpectrum *s,
+    SpectrumView *peak,
+    double peak_width,
+    bool verbose
 ) {
     if (peak_width == 0) {
         return 1;
@@ -143,7 +156,7 @@ int extractPeak(
 // Return values:
 // 0: Success
 // 1: Failure
-int checkPeakStd(SpectrumView *peak, char *detname) {
+static int checkPeakStd(const SpectrumView *peak, const char *detname) {
     if (peak == NULL || peak->size < 3) {
         return 1;
     }
@@ -176,7 +189,7 @@ int checkPeakStd(SpectrumView *peak, char *detname) {
     return 0;
 }
 
-int getArgmax(int *arr, int size) {
+static int getArgmax(const int *arr, int size) {
     double max = 0;
     int argmax = 0;
 
@@ -190,10 +203,19 @@ int getArgmax(int *arr, int size) {
     return argmax;
 }
 
-void dump(
-    char *filename,
-    char *headers[],
-    double *columns[],
+static double getDouble(const void *value, int idx) {
+    return ((double*)value)[idx];
+}
+
+static double getInt(const void *value, int idx) {
+    return ((int*)value)[idx];
+}
+
+static void dump(
+    const char *filename,
+    const char *headers[],
+    const void *columns[],
+    parser_t parsers[],
     int n_cols,
     int n_rows
 ) {
@@ -219,21 +241,21 @@ void dump(
 
     for (int i = 0; i < n_rows; i++) {
         for (int j = 0; j < n_cols - 1; j++) {
-            fprintf(f, "%g,", columns[j][i]);
+            fprintf(f, "%g,", parsers[j](columns[j], i));
         }
-        fprintf(f, "%g\n", columns[n_cols - 1][i]);
+        fprintf(f, "%g\n", parsers[n_cols - 1](columns[n_cols - 1], i));
     }
 
     fclose(f);
 }
 
-void dumpFitResult(
-    double (func)(double, double*),
-    double *x,
-    double *y,
-    double *result,
+static void dumpFitResult(
+    double (*func)(double, const double*),
+    const double *x,
+    const double *y,
+    const double *result,
     int size,
-    char *filename
+    const char *filename
 ) {
     double *fit = (double*)malloc(size * sizeof(double));
 
@@ -245,35 +267,28 @@ void dumpFitResult(
         fit[i] = func(x[i], result);
     }
 
-    double *columns[3] = {x, y, fit};
-    char *headers[3] = {"Energy", "Channel Data", "Best Fit"};
+    const void *columns[3] = {x, y, fit};
+    const char *headers[3] = {"Energy", "Channel Data", "Best Fit"};
+    parser_t parsers[3] = {getDouble, getDouble, getDouble};
 
-    dump(filename, headers, columns, 3, size);
+    dump(filename, headers, columns, parsers, 3, size);
 
     free(fit);
 }
 
-double gaussDebug(double x, double *result) {
+static double gaussDebug(double x, const double *result) {
     return gaussian(x, result[0], result[1], result[2]);
 }
 
 // Return values:
 // 0: Success
 // 1: Failure
-int fitPeakGauss(
-    double fit_result[3],
-    SpectrumView *peak,
-    bool debug
-) {
+static int fitPeakGauss(double fit_result[3], SpectrumView *peak, bool debug) {
     int argmax = getArgmax(peak->spectrum, peak->size);
     double max = peak->corr_spectrum[argmax];
     double x0 = peak->energies[argmax];
 
-    double init[3] = {
-        max,
-        x0,
-        1.5,
-    };
+    double init[3] = {max, x0, 1.5};
 
     if (debug) puts("####\nResults of Gaussian peak fit:");
 
@@ -293,11 +308,7 @@ int fitPeakGauss(
     if (debug) {
         puts("####");
         dumpFitResult(
-            gaussDebug,
-            peak->energies,
-            peak->corr_spectrum,
-            result,
-            peak->size,
+            gaussDebug, peak->energies, peak->corr_spectrum, result, peak->size,
             "debug_Gaussian_fit.csv"
         );
     }
@@ -309,7 +320,7 @@ int fitPeakGauss(
 // Return values:
 // 0: Success
 // 1: Failure
-int correctEcal(
+static int correctEcal(
     SingleSpectrum *s,
     SpectrumView *peak,
     int follow_peak_order,
@@ -358,18 +369,14 @@ int correctEcal(
     return 0;
 }
 
-double combDebug(double x, double *result) {
+static double combDebug(double x, const double *result) {
     return comb(x, result[0], result[1], result[2], result[3], result[4]);
 }
 
 // Return values:
 // 0: Success
 // 1: Failure
-int fitPeakComb(
-    double fit_result[5],
-    SpectrumView *peak,
-    bool debug
-) {
+static int fitPeakComb(double fit_result[5], SpectrumView *peak, bool debug) {
     int argmax = getArgmax(peak->spectrum, peak->size);
     double max = peak->corr_spectrum[argmax];
     double x0 = peak->energies[argmax];
@@ -377,13 +384,7 @@ int fitPeakComb(
     double offset = peak->corr_spectrum[peak->size - 1];
     double A_gauss = max - offset - A_erf / 2;
 
-    double init[5] = {
-        A_gauss,
-        A_erf,
-        x0,
-        1.5,
-        offset,
-    };
+    double init[5] = {A_gauss, A_erf, x0, 1.5, offset};
 
     if (debug) puts("####\nResults of peak fit:");
 
@@ -403,11 +404,7 @@ int fitPeakComb(
     if (debug) {
         puts("####");
         dumpFitResult(
-            combDebug,
-            peak->energies,
-            peak->corr_spectrum,
-            result,
-            peak->size,
+            combDebug, peak->energies, peak->corr_spectrum, result, peak->size,
             "debug_Gaussian_Erf_fit.csv"
         );
     }
@@ -416,7 +413,19 @@ int fitPeakComb(
     return 0;
 }
 
-int correctPeak(SpectrumView *peak, bool verbose, bool debug) {
+static double sumArr(
+    const void *spectrum, int start_idx, int end_idx, parser_t parser
+) {
+    double sum = 0;
+
+    for (int i = start_idx; i < end_idx; i++) {
+        sum += parser(spectrum, i);
+    }
+
+    return sum;
+}
+
+static int correctPeak(SpectrumView *peak, bool verbose, bool debug) {
     double peak_fit_result[5];
     if (fitPeakComb(peak_fit_result, peak, debug) != 0) {
         printf("Could not fit peak\n");
@@ -443,22 +452,38 @@ int correctPeak(SpectrumView *peak, bool verbose, bool debug) {
         );
     }
 
+    if (verbose) {
+        double counts_before, counts_after;
+        counts_before = sumArr(peak->spectrum, 0, peak->size, getInt);
+        counts_after = sumArr(peak->corr_spectrum, 0, peak->size, getDouble);
+
+        printf(
+            "Performed background subtraction: subtracted fraction: %f%%\n",
+            100 * (counts_before - counts_after) / counts_before
+        );
+    }
+
+    if (debug) {
+        const void *columns[3] = {
+            peak->energies, peak->spectrum, peak->corr_spectrum
+        };
+        const char *headers[3] = {
+            "Energy", "Original Counts", "Corrected Counts"
+        };
+        parser_t parsers[3] = {getDouble, getInt, getDouble};
+        dump("corrected_peak.csv", headers, columns, parsers, 3, peak->size);
+    }
+
     return 0;
 }
 
-double getDouble(void *value, int idx) {
-    return ((double*)value)[idx];
-}
-
-double getInt(void *value, int idx) {
-    return ((int*)value)[idx];
-}
-
-double integrateSpectrum(
-    void *spectrum,
+static double integrateSpectrum(
+    const void *spectrum,
+    const double *energies,
+    size_t size,
     int offset,
-    double interpreter(void*, int),
-    double *ecal,
+    parser_t parser,
+    const double *ecal,
     double left_e,
     double right_e
 ) {
@@ -466,83 +491,74 @@ double integrateSpectrum(
 
     int left_inner_idx, right_inner_idx;
 
-    left_inner_idx = searchsorted(ecal, left_e) + 1;
-    right_inner_idx = searchsorted(ecal, right_e);
+    left_inner_idx = searchlinear(energies, size, ecal, left_e) + 1 - offset;
+    right_inner_idx = searchlinear(energies, size, ecal, right_e) - 1 - offset;
 
-    left_inner_idx -= offset;
-    right_inner_idx -= offset;
+    printf("Integrating from %d to %d\n", left_inner_idx, right_inner_idx);
 
-    for (int i = left_inner_idx; i < right_inner_idx; i++) {
-        counts += interpreter(spectrum, i);
-    }
+    counts += sumArr(spectrum, left_inner_idx, right_inner_idx, parser);
 
-    counts += interpreter(spectrum, left_inner_idx - 1) * (
-        fmod(left_e, ecal[1]) / ecal[1]
+    counts += parser(spectrum, left_inner_idx - 1) * (
+        fmod(left_e - ecal[0], ecal[1]) / ecal[1]
     );
 
-    counts += interpreter(spectrum, right_inner_idx) * (
-        fmod(left_e, ecal[1]) / ecal[1]
+    counts += parser(spectrum, right_inner_idx + 1) * (
+        fmod(right_e - ecal[0], ecal[1]) / ecal[1]
     );
 
     return counts;
 }
 
-void calcLineshapeParams(
+static void calcLineshapeParams(
     SingleSpectrum *s,
-    SpectrumView *peak,
+    const SpectrumView *peak,
     double s_width,
     double w_width,
     double w_dist,
     bool w_rightonly,
-    double v2p_bounds[4]
+    const double v2p_bounds[4]
 ) {
-    double counts, peak_counts;
-
-    for (int i = 0; i < s->spectrum_size; i++) {
-        counts += s->spectrum[i];
-    }
-
-    s->counts = counts;
+    s->counts = sumArr(s->spectrum, 0, s->spectrum_size, getInt);
     s->dcounts = sqrt(s->counts);
 
-    peak_counts = 0;
-    for (int i = 0; i < peak->size; i++) {
-        peak_counts += peak->corr_spectrum[i];
-    }
-
-    s->peak_counts = peak_counts;
-    s->dpeak_counts = sqrt(peak_counts);
+    s->peak_counts = sumArr(peak->corr_spectrum, 0, peak->size, getDouble);
+    s->dpeak_counts = sqrt(s->peak_counts);
 
     double s_area, w_area, w_l_area, w_r_area, valley_area, v_peak_area;
 
     s_area = integrateSpectrum(
-        &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
+        peak->corr_spectrum, peak->energies, peak->size,
+        peak->start_idx, getDouble, s->ecal.values,
         M_POSITRON_keV - s_width, M_POSITRON_keV + s_width
     );
 
     w_r_area = integrateSpectrum(
-        &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
+        peak->corr_spectrum, peak->energies, peak->size,
+        peak->start_idx, getDouble, s->ecal.values,
         M_POSITRON_keV + w_dist, M_POSITRON_keV + w_width + w_dist
     );
     w_l_area = w_rightonly ? 0 : integrateSpectrum(
-        &peak->corr_spectrum, peak->start_idx, getDouble, s->ecal.values,
+        peak->corr_spectrum, peak->energies, peak->size,
+        peak->start_idx, getDouble, s->ecal.values,
         M_POSITRON_keV - w_width - w_dist, M_POSITRON_keV - w_dist
     );
     w_area = w_r_area + w_l_area;
 
     valley_area = integrateSpectrum(
-        &s->spectrum, 0, getInt, s->ecal.values, v2p_bounds[0], v2p_bounds[1]
+        s->spectrum, s->energies, s->spectrum_size, 0, getInt, s->ecal.values,
+        v2p_bounds[0], v2p_bounds[1]
     );
     v_peak_area = integrateSpectrum(
-        &s->spectrum, 0, getInt, s->ecal.values, v2p_bounds[2], v2p_bounds[3]
+        s->spectrum, s->energies, s->spectrum_size, 0, getInt, s->ecal.values,
+        v2p_bounds[2], v2p_bounds[3]
     );
 
-    s->s = s_area / peak_counts;
-    s->w = w_area / peak_counts;
+    s->s = s_area / s->peak_counts;
+    s->w = w_area / s->peak_counts;
     s->v2p = valley_area / v_peak_area;
 
-    s->ds = sqrt(s->s * (1 - s->s) / peak_counts);
-    s->dw = sqrt(s->w * (1 - s->w) / peak_counts);
+    s->ds = sqrt(s->s * (1 - s->s) / s->peak_counts);
+    s->dw = sqrt(s->w * (1 - s->w) / s->peak_counts);
     s->dv2p = s->v2p * sqrt(1 / valley_area + 1 / v_peak_area);
 }
 
@@ -556,17 +572,17 @@ void calcLineshapeParams(
  */
 int analyze(
     SingleSpectrum *s,
-    double s_width,
-    double w_width,
-    double w_dist,
-    bool w_rightonly,
-    double peak_width,
-    double bg_frac,
-    bool bg_corr,
-    double v2p_bounds[4],
-    unsigned int follow_peak_order,
-    bool verbose,
-    bool debug
+    const double s_width,
+    const double w_width,
+    const double w_dist,
+    const bool w_rightonly,
+    const double peak_width,
+    const double bg_frac,
+    const bool bg_corr,
+    const double v2p_bounds[4],
+    const unsigned int follow_peak_order,
+    const bool verbose,
+    const bool debug
 ) {
     if (!singleComplete(s)) return 1;
 

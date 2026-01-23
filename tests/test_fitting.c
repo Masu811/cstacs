@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "../include/fitting.h"
+#include "../src/fitting.c"
 
 Test(test_fitting, test_fitGaussian) {
     int N = 1000;
