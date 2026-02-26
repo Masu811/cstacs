@@ -1,12 +1,8 @@
-# CSTACS
+# CSTACS - C++ Version
 
 
 ## Description
-CSTACS is a project that includes the re-implementation of the Python project [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs) in other programming languages, each bringing their own advantages and disadvantages.
-
-Each language is implemented on its own branch. The main branch is written in C++. Currently featured languages are C++ and C. The addition of Rust is planned.
-
-The sole purpose of this project is fun and learning. If the results are at some point in time any useful to anyone, great.
+Congrats, you found the C++ version of [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs).
 
 ## Project Status
 
