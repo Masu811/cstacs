@@ -1,12 +1,8 @@
-# CSTACS
+# CSTACS - C Version
 
 
 ## Description
-CSTACS is a project that includes the re-implementation of the Python project [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs) in C.
-
-The current plan is to write the core functionality in C and then add both a GUI and other language bindings on top.
-
-The sole purpose of this project is fun and learning. If the results are at some point in time any useful to anyone, great.
+Congrats, you found the C version of [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs).
 
 ## Project Status
 - [x] .n42 file import
