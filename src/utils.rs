@@ -5,6 +5,19 @@ pub enum Spectrum {
     U64(Vec<u64>),
 }
 
+macro_rules! spectrum_match {
+    ($s:expr, $v:ident => $body:expr) => {
+        match $s {
+            Spectrum::U8($v) => $body,
+            Spectrum::U16($v) => $body,
+            Spectrum::U32($v) => $body,
+            Spectrum::U64($v) => $body,
+        }
+    };
+}
+
+pub(crate) use spectrum_match;
+
 impl From<Vec<u8>> for Spectrum {
     fn from(other: Vec<u8>) -> Spectrum {
         Spectrum::U8(other)
@@ -50,6 +63,89 @@ impl From<Vec<u64>> for Spectrum {
         } else {
             Spectrum::U64(other)
         }
+    }
+}
+
+impl Spectrum {
+    pub fn len(&self) -> usize {
+        spectrum_match!(self, spectrum => spectrum.len())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+pub enum SpectrumSlice<'a> {
+    U8(&'a [u8]),
+    U16(&'a [u16]),
+    U32(&'a [u32]),
+    U64(&'a [u64]),
+}
+
+macro_rules! spectrum_slice_match {
+    ($s:expr, $v:ident => $body:expr) => {
+        match $s {
+            SpectrumSlice::U8($v) => $body,
+            SpectrumSlice::U16($v) => $body,
+            SpectrumSlice::U32($v) => $body,
+            SpectrumSlice::U64($v) => $body,
+        }
+    };
+}
+
+pub(crate) use spectrum_slice_match;
+
+impl<'a> From<&'a [u8]> for SpectrumSlice<'a> {
+    fn from(other: &'a [u8]) -> SpectrumSlice<'a> {
+        SpectrumSlice::U8(other)
+    }
+}
+
+impl<'a> From<&'a [u16]> for SpectrumSlice<'a> {
+    fn from(other: &'a [u16]) -> SpectrumSlice<'a> {
+        SpectrumSlice::U16(other)
+    }
+}
+
+impl<'a> From<&'a [u32]> for SpectrumSlice<'a> {
+    fn from(other: &'a [u32]) -> SpectrumSlice<'a> {
+        SpectrumSlice::U32(other)
+    }
+}
+
+impl<'a> From<&'a [u64]> for SpectrumSlice<'a> {
+    fn from(other: &'a [u64]) -> SpectrumSlice<'a> {
+        SpectrumSlice::U64(other)
+    }
+}
+
+impl<'a> SpectrumSlice<'a> {
+    pub fn len(self) -> usize {
+        spectrum_slice_match!(self, spectrum => spectrum.len())
+    }
+
+    pub fn variance(self) -> Option<f64> {
+        spectrum_slice_match!(self, spectrum => {
+            let mut count: u64 = 0;
+            let mut mean: f64 = 0.;
+            let mut m2: f64 = 0.;
+
+            for value in spectrum {
+                count += 1;
+                let x = *value as f64;
+                let delta = x - mean;
+                mean += delta / count as f64;
+                let delta2 = x - mean;
+                m2 += delta * delta2;
+            }
+
+            if count > 1 {
+                Some(m2 / (count as f64 - 1.))
+            } else {
+                None
+            }
+        })
     }
 }
 

@@ -3,33 +3,33 @@ use crate::utils::Spectrum2D;
 pub struct CoincidenceSpectrum {
     hist: Spectrum2D,
     detpair: String,
-    ecal: ((f32, f32), (f32, f32)),
-    // s: f32,
-    // ds: f32,
-    // w: f32,
-    // dw: f32,
+    ecal: ((f64, f64), (f64, f64)),
+    // s: f64,
+    // ds: f64,
+    // w: f64,
+    // dw: f64,
     // counts: u64,
-    // dcounts: f32,
-    // peak_counts: f32,
-    // dpeak_counts: f32,
+    // dcounts: f64,
+    // peak_counts: f64,
+    // dpeak_counts: f64,
 }
 
 impl CoincidenceSpectrum {
     pub fn new(
-        hist: Spectrum2D, detpair: String, ecal: ((f32, f32), (f32, f32))
+        hist: Spectrum2D, detpair: String, ecal: ((f64, f64), (f64, f64))
     ) -> Self {
         CoincidenceSpectrum {
             hist: hist,
             detpair: detpair,
             ecal: ecal,
-            // s: f32::NAN,
-            // ds: f32::NAN,
-            // w: f32::NAN,
-            // dw: f32::NAN,
+            // s: f64::NAN,
+            // ds: f64::NAN,
+            // w: f64::NAN,
+            // dw: f64::NAN,
             // counts: 0,
-            // dcounts: f32::NAN,
-            // peak_counts: f32::NAN,
-            // dpeak_counts: f32::NAN,
+            // dcounts: f64::NAN,
+            // peak_counts: f64::NAN,
+            // dpeak_counts: f64::NAN,
         }
     }
 
@@ -49,11 +49,11 @@ impl CoincidenceSpectrum {
         self.hist = hist;
     }
 
-    pub fn ecal(&self) -> &((f32, f32), (f32, f32)) {
+    pub fn ecal(&self) -> &((f64, f64), (f64, f64)) {
         &self.ecal
     }
 
-    pub fn set_ecal(&mut self, ecal: ((f32, f32), (f32, f32))) {
+    pub fn set_ecal(&mut self, ecal: ((f64, f64), (f64, f64))) {
         self.ecal = ecal;
     }
 

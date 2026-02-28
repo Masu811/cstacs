@@ -386,8 +386,8 @@ fn get_or_parse_detname(
 fn get_or_parse_ecal(
     ecal_id: &str,
     ecals: &HashMap<String, Node>,
-    parsed_ecals: &mut HashMap<String, (f32, f32)>,
-) -> Result<(f32, f32), N42FormatError> {
+    parsed_ecals: &mut HashMap<String, (f64, f64)>,
+) -> Result<(f64, f64), N42FormatError> {
     if let Some(ecal) = parsed_ecals.get(ecal_id) {
         return Ok(ecal.clone());
     }
@@ -411,10 +411,10 @@ fn get_or_parse_ecal(
 
     let values = values.split_whitespace();
 
-    let mut ecal: Vec<f32> = Vec::new();
+    let mut ecal: Vec<f64> = Vec::new();
 
     for x in values {
-        let x = x.parse::<f32>()?;
+        let x = x.parse::<f64>()?;
         ecal.push(x);
     }
 
@@ -453,7 +453,7 @@ fn import_single(
     detectors: &HashMap<String, Node>,
     ecals: &HashMap<String, Node>,
     parsed_detnames: &mut HashMap<String, String>,
-    parsed_ecals: &mut HashMap<String, (f32, f32)>,
+    parsed_ecals: &mut HashMap<String, (f64, f64)>,
     m: &mut DopplerMeasurement,
 ) -> Result<(), N42FormatError> {
     let det_id = find_attr(spectrum_node, N42Ref::Det.attr())?;
@@ -493,7 +493,7 @@ fn get_or_parse_c_ecal(
     detectors: &HashMap<String, Node>,
     parsed_detnames: &mut HashMap<String, String>,
     m: &DopplerMeasurement,
-) -> Result<((f32, f32), (f32, f32)), N42FormatError> {
+) -> Result<((f64, f64), (f64, f64)), N42FormatError> {
     let det_1_node = find_node(detpair_node, "RadDetector1Name")?;
     let det_1_id = find_attr(&det_1_node, "radDetectorInformationReference")?;
     let detname_1 = get_or_parse_detname(det_1_id, detectors, parsed_detnames)?;
@@ -593,7 +593,7 @@ fn sort_meas_children<'a, 'input>(
     path: &Path,
 ) -> Result<(), N42FormatError> {
 
-    let mut parsed_ecals: HashMap<String, (f32, f32)> = HashMap::new();
+    let mut parsed_ecals: HashMap<String, (f64, f64)> = HashMap::new();
     let mut parsed_detnames: HashMap<String, String> = HashMap::new();
 
     let mut coinc_nodes: Vec<Node> = Vec::new();
