@@ -13,6 +13,14 @@ pub enum AnalysisError {
     #[error("No peak found. Maybe your energy calibration is faulty?")]
     NoPeakFound,
 
+    #[error(
+        "Provided {param} violated the following constraints: {constraints}"
+    )]
+    InputError {
+        param: String,
+        constraints: String,
+    },
+
     #[error("Error during fitting")]
     FitError {
         #[from]
@@ -340,7 +348,69 @@ impl SingleSpectrum {
         self.dw = (w * (1. - w) / peak_counts).sqrt();
 
         self.v2p = v2p;
-        self.dv2p = v2p * (1. / valley_area + 1. / v_peak_area);
+        self.dv2p = v2p * (1. / valley_area + 1. / v_peak_area).sqrt();
+
+        Ok(())
+    }
+
+    fn check_analyze_params(
+        &self,
+        s_width: f64,
+        w_width: f64,
+        w_dist: f64,
+        peak_width: f64,
+        v2p_bounds: (f64, f64, f64, f64),
+    ) -> Result<(), AnalysisError> {
+        if s_width <= 0. {
+            return Err(AnalysisError::InputError {
+                param: "s_width".into(),
+                constraints: "s_width > 0".into(),
+            });
+        }
+
+        if w_width <= 0. {
+            return Err(AnalysisError::InputError {
+                param: "w_width".into(),
+                constraints: "w_width > 0".into(),
+            });
+        }
+
+        if w_dist <= 0. {
+            return Err(AnalysisError::InputError {
+                param: "w_dist".into(),
+                constraints: "w_dist > 0".into(),
+            });
+        }
+
+        if peak_width <= 0. {
+            return Err(AnalysisError::InputError {
+                param: "peak_width".into(),
+                constraints: "peak_width > 0".into(),
+            });
+        }
+
+        let (a, b, c, d) = v2p_bounds;
+
+        if ![a, b, c, d].iter().all(|&x| x > 0.) {
+            return Err(AnalysisError::InputError {
+                param: "v2p_bounds".into(),
+                constraints: "all v2p_bounds > 0".into(),
+            });
+        }
+
+        if b <= a {
+            return Err(AnalysisError::InputError {
+                param: "v2p_bounds".into(),
+                constraints: "v2p_bounds.1 > v2p_bounds.0".into(),
+            });
+        }
+
+        if d <= c {
+            return Err(AnalysisError::InputError {
+                param: "v2p_bounds".into(),
+                constraints: "v2p_bounds.3 > v2p_bounds.2".into(),
+            });
+        }
 
         Ok(())
     }
@@ -356,22 +426,25 @@ impl SingleSpectrum {
         v2p_bounds: (f64, f64, f64, f64),
         follow_peak_order: FollowPeakOrder,
     ) -> Result<(), AnalysisError> {
-        let (energies, peak) = self.extract_peak(peak_width)?;
+        self.check_analyze_params(
+            s_width, w_width, w_dist, peak_width, v2p_bounds
+        )?;
+
+        let (mut energies, mut peak) = self.extract_peak(peak_width)?;
 
         self.check_peak_std(&peak)?;
 
         if follow_peak_order != FollowPeakOrder::None {
             self.correct_ecal(follow_peak_order, &peak, &energies)?;
+            (energies, peak) = self.extract_peak(peak_width)?;
         }
-
-        let (energies, mut peak) = self.extract_peak(peak_width)?;
 
         if bg_corr == true {
             self.correct_peak(&mut peak, &energies)?;
         }
 
         self.calc_lineshape_params(
-            &peak, &energies, s_width, w_width, w_dist, w_rightonly, v2p_bounds
+            &peak, &energies, s_width, w_width, w_dist, w_rightonly, v2p_bounds,
         )?;
 
         Ok(())

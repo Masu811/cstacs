@@ -12,11 +12,11 @@ Congrats, you found the Rust version of [STACS](https://gitlab.lrz.de/tum-frm2-p
   - [x] Spectra import & type conversion
   - [x] Reference resolution (energy calibration, detector names)
 - [ ] Spectra analysis
-  - [ ] Single Spectra
-    - [ ] Peak parameters via Gaussian fit
-    - [ ] Peak extraction
-    - [ ] Background subtraction
-    - [ ] Line shape parameter calculation
+  - [x] Single Spectra
+    - [x] Peak parameters via Gaussian fit
+    - [x] Peak extraction
+    - [x] Background subtraction
+    - [x] Line shape parameter calculation
   - [ ] Coincidence Spectra
     - [ ] Peak parameters via 2D-Gaussian fit
     - [ ] Background subtraction
