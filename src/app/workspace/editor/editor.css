@@ -1,0 +1,35 @@
+:host {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-self: stretch;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  width: 500px;
+  align-items: center;
+}
+
+.hline {
+  flex: 1;
+  border-top: 2px solid gray;
+  width: 400px;
+  margin: 10px;
+}
+
+button {
+  background-color: var(--editor-color);
+  color: lightgray;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+button:hover {
+  background-color: var(--highlighted-editor-color);
+}
