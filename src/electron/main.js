@@ -1,17 +1,24 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain, contextBridge, dialog } = require('electron')
 
 const path = require('path')
 const url = require('url')
+const spawn = require('child_process');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+let mainWindow, proc;
 
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     autoHideMenuBar: true,
+    frame: false,  // this is required because GTK (Linux GNOME UI library) bugs out otherwise
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js')
+    }
   })
+
+  mainWindow.maximize();
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
@@ -35,7 +42,35 @@ function createWindow () {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', () => {
+  createWindow();
+  ipcMain.handle("showOpenDialog", async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile', 'openDirectory', 'multiSelections'],
+      buttonLabel: "Import",
+    });
+
+    if (result.canceled) {
+      return null;
+    }
+
+    return result.filePaths;
+  });
+  ipcMain.handle("showSaveDialog", async () => {
+    const result = await dialog.showSaveDialog();
+
+    if (result.canceled) {
+      return null;
+    }
+
+    return result.filePaths;
+  });
+  ipcMain.handle("spawnServerProcess", async () => {
+    proc = spawn(path.join(__dirname, "rust_core"), [], {
+      stdio: ["pipe", "pipe", "pipe"]
+    });
+  })
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {

@@ -3,9 +3,9 @@
     <span>File</span>
     <div class="dropdownContainer">
       <ul class="dropdown">
-        <li>Import Data</li>
+        <li (click)="importData()">Import Data</li>
         <li>Save</li>
-        <li>Save As</li>
+        <li (click)="saveProject()">Save As</li>
         <li>Open Project</li>
         <li>New Project</li>
       </ul>
@@ -30,13 +30,8 @@
     </div>
   </li>
 </ul>
-<ul>
-  <li>
-    <span>CPU:</span>
-    <span></span>
-  </li>
-  <li>
-    <span>RAM:</span>
-    <span></span>
-  </li>
-</ul>
+<div class="navigatorContainer">
+  <img src="minimize.svg" />
+  <img src="fullscreen.svg" />
+  <img src="close.svg" />
+</div>
