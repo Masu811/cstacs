@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # CSTACS - C Version
 
 
@@ -17,6 +18,13 @@ The sole purpose of this project is fun and learning. If the results are at some
 =======
 Congrats, you found the C version of [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs).
 >>>>>>> C_main
+=======
+# CSTACS - Rust Version
+
+
+## Description
+Congrats, you found the Rust version of [STACS](https://gitlab.lrz.de/tum-frm2-positrons/stacs).
+>>>>>>> Rust_main
 
 ## Project Status
 - C: N42 and PNG importers work, Single line shape parameters can be calculated
@@ -57,6 +65,7 @@ Congrats, you found the C++ version of [STACS](https://gitlab.lrz.de/tum-frm2-po
 
 ## Installation
 
+<<<<<<< HEAD
 To install the STACS shared library on your (Linux) system, run
 ```bash
 make
@@ -66,10 +75,18 @@ while in the CSTACS root directory. This will install the `stacs.hpp` files in `
 To remove all installed files, run
 ```bash
 make uninstall
+=======
+After downloading this Git Repo and having switched to the Rust branch, you can include CSTACS in your local projects by adding its absolute path to your `Cargo.toml` files
 ```
+[dependencies]
+cstacs = { path = "/path/to/cstacs" }
+>>>>>>> Rust_main
+```
+This works on Windows accordingly.
 
 ## Basic Usage
 
+<<<<<<< HEAD
 Assume we have a folder `measurement` filled with one `measurement_1.n42` file and corresponding `.png` file. We can import the file's spectra into a `DopplerMeasurement` with `Single`- and `CoincidenceSpectra` in the following way.
 ```c++
 #include <iostream>
@@ -90,3 +107,19 @@ To compile this script, we need to link the STACS library with `-lstacs`
 g++ -o eval eval.cpp -lstacs
 ```
 >>>>>>> C++_main
+=======
+Assume we have a folder `measurements` filled with `.n42` files and corresponding `.png` files. A basic scipt, let's call it `eval.rs`, to analyze the data might look like this
+```Rust
+use cstacs::importer::n42_importer::import_n42;
+
+fn main() -> anyhow::Result<()> {
+    let m = import_n42("measurements/measurement_1.n42")?;
+
+    println!("{}", m.shape());
+
+    Ok(())
+}
+```
+
+Here `import_n42` imports one `DopplerMeasurement`, named `m`. Then, we print the shape of `m` to see how many `SingleSpectra` and `CoincidenceSpectra` it contains.
+>>>>>>> Rust_main
