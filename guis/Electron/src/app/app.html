@@ -1,4 +1,5 @@
 <main>
-  <menu-bar></menu-bar>
-  <editor></editor>
+  <topbar [(data)]="data" [(projectLoaded)]="projectLoaded"></topbar>
+  <editor [(data)]="data" [(projectLoaded)]="projectLoaded"></editor>
+  <bottombar></bottombar>
 </main>

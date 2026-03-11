@@ -1,0 +1,23 @@
+@for (mult of data(); track $index) {
+  <span>{{mult.name ?? "unnamed"}}</span>
+  <div class="MultiCampaign">
+    @for (mc of mult.campaigns; track $index) {
+      <span>{{mc.name ?? "unnamed"}}</span>
+      <div class="MeasurementCampaign">
+        @for (m of mc.measurements; track $index) {
+          <span>{{m.name ?? "unnamed"}}</span>
+          <div class="DopplerMeasurement">
+            @for (s of m.singles; track $index) {
+              <span>{{s}}</span>
+              <div class="SingleSpectrum"></div>
+            }
+            @for (c of m.coinc; track $index) {
+              <span>{{c}}</span>
+              <div class="CoincidenceSpectrum"></div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

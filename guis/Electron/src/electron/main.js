@@ -2,7 +2,8 @@ const { app, BrowserWindow, ipcMain, contextBridge, dialog } = require('electron
 
 const path = require('path')
 const url = require('url')
-const spawn = require('child_process');
+const spawn = require('child_process')
+const os = require('os')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -65,10 +66,12 @@ app.on('ready', () => {
 
     return result.filePaths;
   });
-  ipcMain.handle("spawnServerProcess", async () => {
-    proc = spawn(path.join(__dirname, "rust_core"), [], {
-      stdio: ["pipe", "pipe", "pipe"]
-    });
+  ipcMain.handle("health", async () => {
+    return {
+      totalMem: os.totalmem(),
+      freeMem: os.freemem(),
+      cpuLoad: os.loadavg(),
+    }
   })
 });
 

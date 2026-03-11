@@ -1,10 +1,7 @@
-const { contextBridge, ipcRenderer, dialog } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('dialogs', {
+contextBridge.exposeInMainWorld('api', {
   showOpenDialog: () => ipcRenderer.invoke("showOpenDialog"),
   showSaveDialog: () => ipcRenderer.invoke("showSaveDialog"),
+  health: () => ipcRenderer.invoke("health"),
 });
-
-contextBridge.exposeInMainWorld('server', {
-  spawnServerProcess: () => ipcRenderer.invoke("spawnServerProcess"),
-})
