@@ -1,0 +1,5 @@
+<div>
+  <img [src]="icon()"/>
+  <span (click)="toggleOpen()">{{name()}}</span>
+</div>
+<div class="dropdown" [class.openDropdown]="open()"><ng-content/></div>

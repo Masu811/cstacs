@@ -1,23 +1,24 @@
 @for (mult of data(); track $index) {
-  <span>{{mult.name ?? "unnamed"}}</span>
-  <div class="MultiCampaign">
+  <dropdown [name]="mult.name ?? 'unnamed'" icon="mult.svg">
     @for (mc of mult.campaigns; track $index) {
-      <span>{{mc.name ?? "unnamed"}}</span>
-      <div class="MeasurementCampaign">
+      <dropdown [name]="mc.name ?? 'unnamed'" icon="mc.svg">
         @for (m of mc.measurements; track $index) {
-          <span>{{m.name ?? "unnamed"}}</span>
-          <div class="DopplerMeasurement">
+          <dropdown [name]="m.name ?? 'unnamed'" icon="m.svg">
             @for (s of m.singles; track $index) {
-              <span>{{s}}</span>
-              <div class="SingleSpectrum"></div>
+              <div>
+                <span class="s">S</span>
+                <span>{{s}}</span>
+              </div>
             }
             @for (c of m.coinc; track $index) {
-              <span>{{c}}</span>
-              <div class="CoincidenceSpectrum"></div>
+              <div>
+                <span class="c">C</span>
+                <span>{{c}}</span>
+              </div>
             }
-          </div>
+          </dropdown>
         }
-      </div>
+      </dropdown>
     }
-  </div>
+  </dropdown>
 }

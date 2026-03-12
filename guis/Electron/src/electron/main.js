@@ -2,12 +2,12 @@ const { app, BrowserWindow, ipcMain, contextBridge, dialog } = require('electron
 
 const path = require('path')
 const url = require('url')
-const spawn = require('child_process')
-const os = require('os')
+const { OSUtils } = require('node-os-utils')
+const osutils = new OSUtils();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow, proc;
+let mainWindow;
 
 function createWindow () {
   // Create the browser window.
@@ -67,10 +67,11 @@ app.on('ready', () => {
     return result.filePaths;
   });
   ipcMain.handle("health", async () => {
+    const cpuUsage = await osutils.cpu.usage();
+    const memInfo = await osutils.memory.usage();
     return {
-      totalMem: os.totalmem(),
-      freeMem: os.freemem(),
-      cpuLoad: os.loadavg(),
+      cpu: cpuUsage.success ? `${cpuUsage.data.toFixed(0)}%` : "NaN",
+      ram: memInfo.success ? `${memInfo.data.toFixed(0)}%` : "NaN",
     }
   })
 });

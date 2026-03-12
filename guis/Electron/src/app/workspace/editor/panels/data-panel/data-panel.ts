@@ -1,11 +1,14 @@
 import { Component, model, ModelSignal } from "@angular/core";
+import { Panel } from "../panel";
+import { Dropdown } from "./dropdown/dropdown";
 import { MultiCampaign } from "../../../../types";
 
 @Component({
   selector: "data-panel",
   templateUrl: "data-panel.html",
-  styleUrl: "data-panel.css",
+  styleUrls: ["../panel.css", "data-panel.css"],
+  imports: [Dropdown],
 })
-export class DataPanel {
+export class DataPanel extends Panel {
   data: ModelSignal<Array<MultiCampaign>> = model(Array<MultiCampaign>());
 }

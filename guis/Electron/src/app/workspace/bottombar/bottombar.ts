@@ -11,9 +11,11 @@ export class BottomBar {
   ram = signal("");
 
   private readonly checkServerIntervalMilliSec = 5000;
-  private readonly checkSystemIntervalMilliSec = 5000;
+  private readonly checkSystemIntervalMilliSec = 3000;
 
   constructor() {
+    this.checkServerHealth();
+    this.checkSystemHealth();
     setInterval(
       () => this.checkServerHealth(),
       this.checkServerIntervalMilliSec
@@ -41,9 +43,9 @@ export class BottomBar {
   }
 
   async checkSystemHealth() {
-    const { totalMem, freeMem, cpuLoad } = await (window as any).api.health();
+    const { cpu, ram } = await (window as any).api.health();
 
-    this.cpu.set(`${cpuLoad}%`);
-    this.ram.set(`${((totalMem - freeMem) / totalMem).toFixed(0)}%`);
+    this.cpu.set(`${cpu}`);
+    this.ram.set(`${ram}`);
   }
 }
