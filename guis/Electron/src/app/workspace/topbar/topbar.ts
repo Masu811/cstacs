@@ -12,7 +12,6 @@ export class TopBar {
 
   async importData() {
     const path = await (window as any).api.showOpenDialog();
-    console.log(path);
 
     if (path == null) {
       return;
@@ -20,7 +19,6 @@ export class TopBar {
 
     const response = await fetch(`http://127.0.0.1:8000/import_data?path=${path}`);
     const newData = await response.json() as MultiCampaign;
-    console.log(newData);
     this.data.update(data => {
       data.push(newData);
       return data;
@@ -30,6 +28,5 @@ export class TopBar {
 
   async saveProject() {
     const files = await (window as any).api.showSaveDialog();
-    console.log(files);
   }
 }

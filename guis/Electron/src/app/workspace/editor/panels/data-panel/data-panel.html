@@ -1,19 +1,19 @@
-@for (mult of data(); track $index) {
-  <dropdown [name]="mult.name ?? 'unnamed'" icon="mult.svg">
-    @for (mc of mult.campaigns; track $index) {
-      <dropdown [name]="mc.name ?? 'unnamed'" icon="mc.svg">
-        @for (m of mc.measurements; track $index) {
-          <dropdown [name]="m.name ?? 'unnamed'" icon="m.svg">
+@for (mult of data(); track $index; let i = $index) {
+  <dropdown [name]="mult.name ?? 'unnamed'" icon="mult.svg" (clicked)="fetchMetadata([i])">
+    @for (mc of mult.campaigns; track $index; let j = $index) {
+      <dropdown [name]="mc.name ?? 'unnamed'" icon="mc.svg" (clicked)="fetchMetadata([i, j])">
+        @for (m of mc.measurements; track $index; let k = $index) {
+          <dropdown [name]="m.name ?? 'unnamed'" icon="m.svg" (clicked)="fetchMetadata([i, j, k])">
             @for (s of m.singles; track $index) {
               <div>
                 <span class="s">S</span>
-                <span>{{s}}</span>
+                <span (click)="fetchMetadata([i, j, k, s])">{{s}}</span>
               </div>
             }
             @for (c of m.coinc; track $index) {
               <div>
                 <span class="c">C</span>
-                <span>{{c}}</span>
+                <span (click)="fetchMetadata([i, j, k, c])">{{c}}</span>
               </div>
             }
           </dropdown>

@@ -10,7 +10,7 @@
     </div>
   </div>
 } @else {
-  <data-panel [(data)]="data"></data-panel>
-  <detail-panel [(data)]="data"></detail-panel>
+  <data-panel [(data)]="data" [(details)]="details"></data-panel>
+  <metadata-panel [(details)]="details"></metadata-panel>
   <viz-panel [(data)]="data"></viz-panel>
 }
