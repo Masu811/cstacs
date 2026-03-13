@@ -1,5 +1,6 @@
 import { Component, model, ModelSignal, signal } from "@angular/core";
 import { MultiCampaign } from "../../types";
+import { Welcome } from "./panels/welcome-panel/welcome";
 import { DataPanel } from "./panels/data-panel/data-panel";
 import { MetadataPanel } from "./panels/metadata-panel/metadata-panel";
 import { VizPanel } from "./panels/viz-panel/viz-panel";
@@ -8,7 +9,7 @@ import { VizPanel } from "./panels/viz-panel/viz-panel";
   selector: "editor",
   templateUrl: "editor.html",
   styleUrl: "editor.css",
-  imports: [DataPanel, MetadataPanel, VizPanel],
+  imports: [Welcome, DataPanel, MetadataPanel, VizPanel],
 })
 export class Editor {
   projectLoaded = model(false);

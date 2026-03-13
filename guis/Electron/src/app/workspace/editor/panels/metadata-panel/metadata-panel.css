@@ -6,3 +6,7 @@ div {
   white-space: nowrap;
   margin-top: 10px;
 }
+
+h1 {
+  margin: 0;
+}
