@@ -1,59 +1,30 @@
-# Cstacs
+# CSTACS - JavaScript GUI
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.0.
+## Requirements
 
-## Development server
+npm, node.js
 
-To start a local development server, run:
+## Installation
 
+To install all node dependencies, run
 ```bash
-ng serve
+npm install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+To bundle and run the app, run
 ```bash
-ng generate component component-name
+npm run electron
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
+To bundle the app and create a distributable, run
 ```bash
-ng generate --help
+npm run make
 ```
+This creates an executable binary `out/stacs-linux-x64/stacs` and a `.deb` installer under `out/make/deb/x64/stacs_0.0.0_amd64.deb`.
 
-## Building
+## Basic Usage
 
-To build the project run:
+When running an executable binary or running `npm run electron`, the GUI will open. For any functionality, you also need to manually start the engine (see `servers/Python/` in this project for how to do that).
+The GUI indicates if it has a connection to an engine via the red or green dot on the bottom right.
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Currently, most buttons in the top menu bar do nothing (except for importing data).
