@@ -19,10 +19,8 @@ export class TopBar {
 
     const response = await fetch(`http://127.0.0.1:8000/import_data?path=${path}`);
     const newData = await response.json() as MultiCampaign;
-    this.data.update(data => {
-      data.push(newData);
-      return data;
-    });
+
+    this.data.update(oldData => [...oldData, newData]);
     this.projectLoaded.set(true);
   }
 

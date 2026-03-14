@@ -13,6 +13,6 @@ import { MultiCampaign } from './types';
 export class App {
   protected readonly title = signal('stacs');
 
-  data: WritableSignal<Array<MultiCampaign>> = model(Array<MultiCampaign>());
+  data: WritableSignal<Array<MultiCampaign>> = signal(Array<MultiCampaign>());
   projectLoaded = signal(false);
 }

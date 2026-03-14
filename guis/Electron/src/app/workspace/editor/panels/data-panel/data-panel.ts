@@ -1,4 +1,4 @@
-import { Component, model, ModelSignal } from "@angular/core";
+import { Component, ModelSignal, model } from "@angular/core";
 import { Panel } from "../panel";
 import { Dropdown } from "./dropdown/dropdown";
 import { MultiCampaign } from "../../../../types";
