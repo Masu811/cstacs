@@ -8,7 +8,7 @@
 #include <libxml/tree.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../include/stb_image.h"
+#include "../../common_includes/stb_image.h"
 
 #include "../include/importer.h"
 #include "../include/structs.h"

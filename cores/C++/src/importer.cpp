@@ -15,7 +15,7 @@
 // PNG Reader Library
 #define STB_IMAGE_IMPLEMENTATION
 extern "C" {
-    #include "stb_image.h"
+    #include "../../common_includes/stb_image.h"
 }
 
 #include "single.hpp"
