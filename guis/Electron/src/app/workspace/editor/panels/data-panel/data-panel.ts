@@ -1,4 +1,4 @@
-import { Component, ModelSignal, model } from "@angular/core";
+import { Component, model } from "@angular/core";
 import { Panel } from "../panel";
 import { Dropdown } from "./dropdown/dropdown";
 import { MultiCampaign } from "../../../../types";
@@ -10,12 +10,11 @@ import { MultiCampaign } from "../../../../types";
   imports: [Dropdown],
 })
 export class DataPanel extends Panel {
-  data: ModelSignal<Array<MultiCampaign>> = model(Array<MultiCampaign>());
+  data = model(Array<MultiCampaign>());
   details = model({});
 
   async fetchMetadata(idcs: Array<number | string>) {
-    idcs[0] = this.data()[idcs[0] as number]?.id;
-    const response = await fetch(`http://127.0.0.1:8000/getMetadata/${idcs.join("/")}`);
+    const response = await fetch(`http://127.0.0.1:8000/getMetadata/${idcs.join("-")}`);
     if (!response.ok) {
       console.error(`Failed to fetch metadata for indices ${idcs}`);
       return;

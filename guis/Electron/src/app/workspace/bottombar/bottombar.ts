@@ -37,11 +37,8 @@ export class BottomBar {
     };
 
     this.ws.onerror = (err) => {
-      console.error(err);
       this.isServerOk.set(false);
-      setTimeout(
-        () => this.checkServerHealth(), this.checkServerIntervalMilliSec
-      );
+      this.ws?.close();
     };
   }
 

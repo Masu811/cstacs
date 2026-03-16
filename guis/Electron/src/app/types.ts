@@ -16,3 +16,12 @@ export type MultiCampaign = {
   "name": string | null,
   "campaigns": Array<MeasurementCampaign>,
 }
+
+export enum Selection {
+  SINGLE,
+  COINC,
+  DOPPLER,
+  CAMPAIGN,
+  MULTI,
+  NULL,
+}

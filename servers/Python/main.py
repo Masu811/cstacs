@@ -9,7 +9,7 @@ from stacs.coinc import CoincidenceSpectrum
 from stacs.single import SingleSpectrum
 from stacs import MultiCampaign, MeasurementCampaign, DopplerMeasurement
 
-data = dict()
+data: list[MultiCampaign] = []
 
 app = FastAPI()
 
@@ -26,7 +26,6 @@ async def health(websocket: WebSocket):
 def tree(m: MultiCampaign | MeasurementCampaign | DopplerMeasurement):
     if isinstance(m, DopplerMeasurement):
         return {
-            "id": str(uuid()),
             "name": m.name,
             "singles": [s.detname for s in m.singles],
             "coinc": [c.detpair for c in m.coinc],
@@ -34,13 +33,11 @@ def tree(m: MultiCampaign | MeasurementCampaign | DopplerMeasurement):
 
     if isinstance(m, MeasurementCampaign):
         return {
-            "id": str(uuid()),
             "name": m.name,
             "measurements": [tree(n) for n in m],
         }
 
     return {
-        "id": str(uuid()),
         "name": m.name,
         "campaigns": [tree(n) for n in m]
     }
@@ -53,12 +50,8 @@ def import_data(path: str):
         autocompute_coinc=False,
     )
     t = tree(mult)
-    data[t["id"]] = mult
+    data.append(mult)
     return JSONResponse(t)
-
-@app.get("/delete_data")
-def delete_data(id: str):
-    data.pop(id)
 
 def scalarize(x):
     return str(np.array(x).tolist())
@@ -122,14 +115,14 @@ def to_json(
         return s_to_json(x)
     return c_to_json(x)
 
-@app.get("/getMetadata/{path:path}")
-def get_metadata(path: str):
-    idcs = path.split("/")
+@app.get("/getMetadata/{idcs}")
+def get_metadata(idcs: str):
+    keys = idcs.split("-")
 
-    types = [str, int, int, str]
+    types = [int, int, int, str]
 
     x = data
-    for i, type in zip(idcs, types):
+    for i, type in zip(keys, types):
         x = x[type(i)]
 
     return JSONResponse(to_json(x))

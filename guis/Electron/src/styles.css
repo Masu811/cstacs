@@ -19,3 +19,31 @@ body {
   font-family: "IBM Plex Sans", Arial, Helvetica, sans-serif;
   font-size: 0.95em;
 }
+
+.lm_header {
+  background-color: var(--menu-color);
+}
+
+.lm_tab {
+  box-shadow: unset !important;
+}
+
+.lm_header .lm_tabs .lm_tab {
+  background-color: var(--menu-color);
+  font-family: "IBM Plex Sans";
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+}
+
+.lm_header .lm_tabs .lm_tab.lm_active {
+  background-color: var(--editor-color);
+}
+
+.lm_header.lm_focused .lm_tab {
+  background-color: var(--menu-color);
+}
+
+.lm_header.lm_focused .lm_tab.lm_active.lm_focused {
+  background-color: var(--editor-color);
+}

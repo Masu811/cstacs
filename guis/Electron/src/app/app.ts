@@ -1,5 +1,6 @@
 import { Component, signal, model, WritableSignal } from '@angular/core';
 import { TopBar } from './workspace/topbar/topbar';
+import { Toolbar } from './workspace/toolbar/toolbar';
 import { Editor } from './workspace/editor/editor';
 import { BottomBar } from './workspace/bottombar/bottombar';
 import { MultiCampaign } from './types';
@@ -8,7 +9,7 @@ import { MultiCampaign } from './types';
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.css',
-  imports: [TopBar, Editor, BottomBar],
+  imports: [TopBar, Toolbar, Editor, BottomBar],
 })
 export class App {
   protected readonly title = signal('stacs');

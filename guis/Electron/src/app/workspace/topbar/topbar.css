@@ -19,6 +19,7 @@ li {
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 li:hover {
@@ -55,19 +56,6 @@ li:hover .dropdown {
   background-color: var(--highlighted-editor-color);
 }
 
-.navigatorContainer {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 15px;
-  margin: 0;
-  padding: 0 5px;
-}
-
 img {
   height: 1em;
-}
-
-img:hover {
-  background-color: var(--highlighted-editor-color);
 }
