@@ -1,38 +1,28 @@
-<<<<<<<< HEAD:cores/C/Makefile
 CC = gcc
 CFLAGS = -O3 -Wall -Wextra -Wpedantic
 LIBS = -I $(HEADER_DIR) -I/usr/include/libxml2 -lm -lxml2 -lgsl -lgslcblas
-========
-CXX = g++
-CXXFLAGS = -g -O3 -std=c++20
-LIBS = -lgsl -lgslcblas
->>>>>>>> C++_main:cores/C++/Makefile
 
 TARGET = stacs
 SRC_DIR = src
+HEADER_DIR = include
 BUILD_DIR = build
 INCLUDE_DIR = /usr/include
 LIB_DIR = /usr/lib
 
-SRC = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.c)
-HEAD = $(wildcard $(SRC_DIR)/*.hpp) $(wildcard $(SRC_DIR)/*.h)
+SRC = $(wildcard $(SRC_DIR)/*.c)
+HEAD = $(wildcard $(HEADER_DIR)/*.h)
 
-include: $(SRC_DIR)/$(TARGET).hpp $(BUILD_DIR)/lib$(TARGET).so
+include: $(HEADER_DIR)/$(TARGET).h $(BUILD_DIR)/lib$(TARGET).so
 	sudo install -m 0755 $(BUILD_DIR)/lib$(TARGET).so $(LIB_DIR)
 	sudo mkdir -p $(INCLUDE_DIR)/$(TARGET)
 	sudo install -m 0644 $(HEAD) $(INCLUDE_DIR)/$(TARGET)
 	make clean
-<<<<<<<< HEAD:cores/C/Makefile
 	@echo ""
 	@echo "The STACS shared library is now ready for use"
-========
-	sudo ldconfig
-	@echo "\nThe STACS shared library is now ready for use"
->>>>>>>> C++_main:cores/C++/Makefile
 
 $(BUILD_DIR)/lib$(TARGET).so: $(SRC) $(HEAD)
 	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $(SRC) $(LIBS)
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ $(SRC) $(LIBS)
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -40,6 +30,5 @@ clean:
 uninstall:
 	sudo rm -rf $(INCLUDE_DIR)/$(TARGET)
 	sudo rm -f $(LIB_DIR)/lib$(TARGET).so
-	sudo ldconfig
 
 .PHONY: include clean uninstall

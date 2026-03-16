@@ -1,12 +1,6 @@
-<<<<<<<< HEAD:cores/C/Makefile
-CC = gcc
-CFLAGS = -O3 -Wall -Wextra -Wpedantic
-LIBS = -I $(HEADER_DIR) -I/usr/include/libxml2 -lm -lxml2 -lgsl -lgslcblas
-========
 CXX = g++
 CXXFLAGS = -g -O3 -std=c++20
 LIBS = -lgsl -lgslcblas
->>>>>>>> C++_main:cores/C++/Makefile
 
 TARGET = stacs
 SRC_DIR = src
@@ -22,13 +16,9 @@ include: $(SRC_DIR)/$(TARGET).hpp $(BUILD_DIR)/lib$(TARGET).so
 	sudo mkdir -p $(INCLUDE_DIR)/$(TARGET)
 	sudo install -m 0644 $(HEAD) $(INCLUDE_DIR)/$(TARGET)
 	make clean
-<<<<<<<< HEAD:cores/C/Makefile
+	sudo ldconfig
 	@echo ""
 	@echo "The STACS shared library is now ready for use"
-========
-	sudo ldconfig
-	@echo "\nThe STACS shared library is now ready for use"
->>>>>>>> C++_main:cores/C++/Makefile
 
 $(BUILD_DIR)/lib$(TARGET).so: $(SRC) $(HEAD)
 	mkdir -p $(BUILD_DIR)
