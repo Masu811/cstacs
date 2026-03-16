@@ -9,37 +9,40 @@ export class BottomBar {
   isServerOk = signal(false);
   cpu = signal("");
   ram = signal("");
+  ws: null | WebSocket = null;
 
-  private readonly checkServerIntervalMilliSec = 5000;
+  private readonly checkServerIntervalMilliSec = 3000;
   private readonly checkSystemIntervalMilliSec = 3000;
 
   constructor() {
     this.checkServerHealth();
-    this.checkSystemHealth();
-    setInterval(
-      () => this.checkServerHealth(),
-      this.checkServerIntervalMilliSec
-    );
     setInterval(
       () => this.checkSystemHealth(),
       this.checkSystemIntervalMilliSec
     );
   }
 
-  async checkServerHealth() {
-    try {
-      const response = await fetch("http://127.0.0.1:8000/health", {
-        signal: AbortSignal.timeout(this.checkServerIntervalMilliSec)
-      });
-      if (response.ok) {
-        this.isServerOk.set(true);
-      } else {
-        this.isServerOk.set(false);
-      }
-    } catch (error) {
-      console.log(error);
+  checkServerHealth() {
+    this.ws = new WebSocket("ws://127.0.0.1:8000/health");
+
+    this.ws.onopen = () => {
+      this.isServerOk.set(true);
+    };
+
+    this.ws.onclose = () => {
       this.isServerOk.set(false);
-    }
+      setTimeout(
+        () => this.checkServerHealth(), this.checkServerIntervalMilliSec
+      );
+    };
+
+    this.ws.onerror = (err) => {
+      console.error(err);
+      this.isServerOk.set(false);
+      setTimeout(
+        () => this.checkServerHealth(), this.checkServerIntervalMilliSec
+      );
+    };
   }
 
   async checkSystemHealth() {

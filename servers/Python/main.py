@@ -2,20 +2,26 @@ from pathlib import Path
 from uuid import uuid4 as uuid
 
 import numpy as np
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
 from stacs.coinc import CoincidenceSpectrum
-from stacs.importer import SingleSpectrum
+from stacs.single import SingleSpectrum
 from stacs import MultiCampaign, MeasurementCampaign, DopplerMeasurement
 
 data = dict()
 
 app = FastAPI()
 
-@app.get("/health")
-def health():
-    return JSONResponse({"status": "ok"})
+@app.websocket("/health")
+async def health(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            await websocket.receive()
+    except (WebSocketDisconnect, RuntimeError):
+        print("Client disconnected")
+        pass
 
 def tree(m: MultiCampaign | MeasurementCampaign | DopplerMeasurement):
     if isinstance(m, DopplerMeasurement):

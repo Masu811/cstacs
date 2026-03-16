@@ -1,12 +1,40 @@
-import { Component, model, ModelSignal } from "@angular/core";
+import { Component, AfterViewInit } from "@angular/core";
 import { Panel } from "../panel";
-import { MultiCampaign } from "../../../../types";
 
 @Component({
   selector: "viz-panel",
   templateUrl: "viz-panel.html",
   styleUrls: ["../panel.css", "viz-panel.css"],
+  imports: [],
 })
-export class VizPanel extends Panel {
-  data: ModelSignal<Array<MultiCampaign>> = model(Array<MultiCampaign>());
+export class VizPanel extends Panel implements AfterViewInit {
+  async ngAfterViewInit() {
+    const Plotly = await this.getPlotly();
+
+    var trace1 = {
+      x: [1, 2, 3, 4],
+      y: [10, 15, 13, 17],
+      type: 'scatter'
+    };
+
+    var trace2 = {
+      x: [1, 2, 3, 4],
+      y: [16, 5, 11, 9],
+      type: 'scatter'
+    };
+
+    var data = [trace1, trace2];
+
+    //@ts-ignore
+    Plotly.newPlot('canvas', data);
+  }
+
+  async getPlotly() {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const module = await import("plotly.js-dist-min");
+    return module.default;
+  }
 }
