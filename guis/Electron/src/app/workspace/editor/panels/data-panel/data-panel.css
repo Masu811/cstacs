@@ -7,3 +7,11 @@
   color: dodgerblue;
   margin: 0 7px;
 }
+
+.header {
+  cursor: pointer;
+}
+
+.header:hover {
+  background-color: var(--highlighted-editor-color);
+}

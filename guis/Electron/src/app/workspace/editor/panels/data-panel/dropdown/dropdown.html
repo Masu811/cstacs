@@ -1,5 +1,5 @@
-<div>
+<div class="header" (click)="clickHandler()">
   <img [src]="icon()"/>
-  <span (click)="clickHandler()">{{name()}}</span>
+  <span>{{name()}}</span>
 </div>
 <div class="dropdown" [class.openDropdown]="open()"><ng-content/></div>

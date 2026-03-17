@@ -10,8 +10,15 @@ img {
 }
 
 span {
-  cursor: pointer;
   text-wrap: nowrap;
+}
+
+.header {
+  cursor: pointer;
+}
+
+.header:hover {
+  background-color: var(--highlighted-editor-color);
 }
 
 .dropdown {

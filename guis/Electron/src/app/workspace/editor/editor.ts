@@ -7,6 +7,7 @@ import { Welcome } from "./panels/welcome-panel/welcome";
 import { DataPanel } from "./panels/data-panel/data-panel";
 import { MetadataPanel } from "./panels/metadata-panel/metadata-panel";
 import { VizPanel } from "./panels/viz-panel/viz-panel";
+import { EmptyPanel } from "./panels/empty-panel/empty-panel";
 
 @Component({
   selector: "editor",
@@ -56,9 +57,7 @@ export class Editor implements AfterViewInit {
     };
 
     registerPanel(
-      'WelcomeComponent', Welcome, [
-        inputBinding('projectLoaded', this.projectLoaded)
-      ]
+      'EmptyPanelComponent', EmptyPanel, []
     );
     registerPanel(
       'DataPanelComponent', DataPanel, [
@@ -81,21 +80,29 @@ export class Editor implements AfterViewInit {
       root: {
         type: 'row',
         content: [{
-          type: 'column',
+          type: 'component',
+          componentType: 'DataPanelComponent',
+          title: 'Data',
+          size: "20%",
+        }, {
+          type: 'stack',
           content: [{
             type: 'component',
-            componentType: 'DataPanelComponent',
-            title: 'Data'
+            componentType: 'MetadataPanelComponent',
+            title: 'Metadata',
           }, {
             type: 'component',
-            componentType: 'MetadataPanelComponent',
-            title: 'Inspect'
-          }]
-        }, {
-          type: 'component',
-          componentType: 'VizPanelComponent',
-          title: 'Plots'
-        }]
+            componentType: 'VizPanelComponent',
+            title: 'Plots',
+          }],
+        }],
+      },
+      settings:{
+          showPopoutIcon: false,
+      },
+      dimensions: {
+        borderWidth: 1,
+        headerHeight: 25,
       }
     };
 

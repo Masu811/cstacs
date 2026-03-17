@@ -5,15 +5,15 @@
         @for (m of mc.measurements; track $index; let k = $index) {
           <dropdown [name]="m.name ?? 'unnamed'" icon="m.svg" (clicked)="fetchMetadata([i, j, k])">
             @for (s of m.singles; track $index) {
-              <div>
+              <div class="header" (click)="fetchMetadata([i, j, k, s])">
                 <span class="s">S</span>
-                <span (click)="fetchMetadata([i, j, k, s])">{{s}}</span>
+                <span>{{s}}</span>
               </div>
             }
             @for (c of m.coinc; track $index) {
-              <div>
+              <div class="header" (click)="fetchMetadata([i, j, k, c])">
                 <span class="c">C</span>
-                <span (click)="fetchMetadata([i, j, k, c])">{{c}}</span>
+                <span>{{c}}</span>
               </div>
             }
           </dropdown>

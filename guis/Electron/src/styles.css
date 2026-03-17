@@ -24,16 +24,33 @@ body {
   background-color: var(--menu-color);
 }
 
-.lm_tab {
-  box-shadow: unset !important;
+.lm_tabs {
+  height: 100%;
 }
 
 .lm_header .lm_tabs .lm_tab {
   background-color: var(--menu-color);
   font-family: "IBM Plex Sans";
   font-size: 0.95em;
-  display: flex;
   align-items: center;
+  height: 100%;
+  box-shadow: unset !important;
+  padding: 0 10px !important;
+  margin: 0 !important;
+  min-width: 30px;
+  display: flex;
+}
+
+.lm_close_tab {
+  position: relative !important;
+  top: unset !important;
+  right: unset !important;
+  display: hidden !important;
+  margin-left: 10px !important;
+}
+
+.lm_tab:hover .lm_close_tab {
+  display: block;
 }
 
 .lm_header .lm_tabs .lm_tab.lm_active {
@@ -46,4 +63,8 @@ body {
 
 .lm_header.lm_focused .lm_tab.lm_active.lm_focused {
   background-color: var(--editor-color);
+}
+
+.lm_splitter {
+  background-color: var(--highlighted-menu-color);
 }
