@@ -1,5 +1,5 @@
-import { Component, model } from "@angular/core";
-import { MultiCampaign } from "../../types";
+import { Component, model, input, InputSignal } from "@angular/core";
+import { MultiCampaign, Selection } from "../../types";
 
 @Component({
   selector: "toolbar",
@@ -9,6 +9,10 @@ import { MultiCampaign } from "../../types";
 export class Toolbar {
   data = model(Array<MultiCampaign>());
   projectLoaded = model(false);
+
+  datatypes = input({
+    campaigns: false, doppler: false, single: false, coinc: false
+  } as Selection);
 
   async importData() {
     const path = await (window as any).api.showOpenDialog();

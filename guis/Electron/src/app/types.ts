@@ -17,11 +17,9 @@ export type MultiCampaign = {
   "campaigns": Array<MeasurementCampaign>,
 }
 
-export enum Selection {
-  SINGLE,
-  COINC,
-  DOPPLER,
-  CAMPAIGN,
-  MULTI,
-  NULL,
+export type Selection = {
+  campaigns: boolean,
+  doppler: boolean,
+  single: boolean,
+  coinc: boolean,
 }

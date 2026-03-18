@@ -1,4 +1,8 @@
-import { Component, model, ModelSignal, signal, AfterViewInit, inject, EnvironmentInjector, createComponent, Type, inputBinding, Binding, twoWayBinding, ApplicationRef } from "@angular/core";
+import {
+  Component, model, ModelSignal, signal, AfterViewInit, inject,
+  EnvironmentInjector, createComponent, Type, inputBinding, Binding,
+  twoWayBinding, ApplicationRef
+} from "@angular/core";
 
 import { ComponentContainer, GoldenLayout, LayoutConfig } from 'golden-layout'
 
@@ -16,7 +20,7 @@ import { EmptyPanel } from "./panels/empty-panel/empty-panel";
 })
 export class Editor implements AfterViewInit {
   projectLoaded = model(false);
-  data: ModelSignal<Array<MultiCampaign>> = model(Array<MultiCampaign>());
+  data = model(Array<MultiCampaign>());
   details = signal({});
 
   private envInjector = inject(EnvironmentInjector);
