@@ -17,3 +17,7 @@ li {
 li:hover {
   background-color: var(--highlighted-editor-color);
 }
+
+.active {
+  background-color: var(--highlighted-editor-color);
+}

@@ -1,4 +1,4 @@
-import { Component, model, input, signal } from "@angular/core";
+import { Component, model, input, signal, output, computed, ChangeDetectorRef } from "@angular/core";
 import { Panel } from "../panel";
 import { Dropdown } from "./dropdown/dropdown";
 import { MultiCampaign, Selection, Dtype, DtypeCounter } from "../../../../types";
@@ -13,7 +13,6 @@ import { Leaf } from "./leaf/leaf";
 })
 export class DataPanel extends Panel {
   data = model(Array<MultiCampaign>());
-  details = model({});
 
   dtypes = Dtype;
   availDtypes = input.required<Selection>();
@@ -22,15 +21,29 @@ export class DataPanel extends Panel {
     [Dtype.MC]: 0,
     [Dtype.M]: 0,
   } as DtypeCounter);
-  dtypeDisplayLevel = signal(0);
+  multOpen = computed(() => this.openCounter()[Dtype.MULT] > 0);
+  mcOpen = computed(() => this.openCounter()[Dtype.MC] > 0);
+  mOpen = computed(() => this.openCounter()[Dtype.M] > 0);
+  multToggle = signal([false]);
+  mcToggle = signal([false]);
+  mToggle = signal([false]);
 
-  async fetchMetadata(idcs: Array<number | string>) {
-    const response = await fetch(`http://127.0.0.1:8000/getMetadata/${idcs.join("-")}`);
-    if (!response.ok) {
-      console.error(`Failed to fetch metadata for indices ${idcs}`);
-      return;
+  constructor(private ref: ChangeDetectorRef) {
+    super();
+    this.ref = ref;
+  }
+
+  handleDtypeToggle(type: Dtype) {
+    switch (type) {
+      case Dtype.MULT:
+        this.multToggle.set([!this.multOpen()]);
+        break;
+      case Dtype.MC:
+        this.mcToggle.set([!this.mcOpen()]);
+        break;
+      case Dtype.M:
+        this.mToggle.set([!this.mOpen()]);
+        break;
     }
-    const data = await response.json();
-    this.details.set(data);
   }
 }

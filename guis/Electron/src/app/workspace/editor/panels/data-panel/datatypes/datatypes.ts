@@ -1,4 +1,4 @@
-import { Component, input, model } from "@angular/core";
+import { Component, input, model, output } from "@angular/core";
 import { Dtype, DtypeCounter, Selection } from "../../../../../types";
 
 @Component({
@@ -9,10 +9,10 @@ import { Dtype, DtypeCounter, Selection } from "../../../../../types";
 export class Datatypes {
   dtypes = Dtype;
   availDtypes = input.required<Selection>();
-  openCounter = model.required<DtypeCounter>();
-  dtypeDisplayLevel = model(0);
+  openCounter = input.required<DtypeCounter>();
+  dtypeToggle = output<Dtype>();
 
   toggleDtypeDisplay(type: Dtype) {
-    this.dtypeDisplayLevel.set(type);
+    this.dtypeToggle.emit(type);
   }
 }

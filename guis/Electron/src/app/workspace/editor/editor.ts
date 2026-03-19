@@ -21,7 +21,6 @@ import { EmptyPanel } from "./panels/empty-panel/empty-panel";
 export class Editor implements AfterViewInit {
   projectLoaded = model(false);
   data = model(Array<MultiCampaign>());
-  details = signal({});
 
   availDtypes = input.required<Selection>();
 
@@ -69,14 +68,12 @@ export class Editor implements AfterViewInit {
       'DataPanelComponent', DataPanel, [
         inputBinding('availDtypes', this.availDtypes),
         twoWayBinding('data', this.data),
-        twoWayBinding('details', this.details),
       ]
     );
-    registerPanel(
-      'MetadataPanelComponent', MetadataPanel, [
-        twoWayBinding('details', this.details),
-      ]
-    );
+    // registerPanel(
+    //   'MetadataPanelComponent', MetadataPanel, [
+    //   ]
+    // );
     registerPanel(
       'VizPanelComponent', VizPanel, [
         inputBinding('data', this.data),
@@ -94,10 +91,6 @@ export class Editor implements AfterViewInit {
         }, {
           type: 'stack',
           content: [{
-            type: 'component',
-            componentType: 'MetadataPanelComponent',
-            title: 'Metadata',
-          }, {
             type: 'component',
             componentType: 'VizPanelComponent',
             title: 'Plots',
