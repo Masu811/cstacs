@@ -1,5 +1,5 @@
 import { Component, model, input, InputSignal } from "@angular/core";
-import { MultiCampaign, Selection } from "../../types";
+import { Dtype, MultiCampaign, Selection } from "../../types";
 
 @Component({
   selector: "toolbar",
@@ -10,9 +10,8 @@ export class Toolbar {
   data = model(Array<MultiCampaign>());
   projectLoaded = model(false);
 
-  datatypes = input({
-    campaigns: false, doppler: false, single: false, coinc: false
-  } as Selection);
+  availDtypes = input.required<Selection>();
+  dtypes = Dtype;
 
   async importData() {
     const path = await (window as any).api.showOpenDialog();

@@ -1,20 +1,15 @@
+<datatypes [availDtypes]="availDtypes()" [(openCounter)]="openCounter" [(dtypeDisplayLevel)]="dtypeDisplayLevel"></datatypes>
 @for (mult of data(); track $index; let i = $index) {
-  <dropdown [name]="mult.name ?? 'unnamed'" icon="mult.svg" (clicked)="fetchMetadata([i])">
+  <dropdown [name]="mult.name ?? 'unnamed'" [kind]="dtypes.MULT" [(openCounter)]="openCounter" icon="mult.svg">
     @for (mc of mult.campaigns; track $index; let j = $index) {
-      <dropdown [name]="mc.name ?? 'unnamed'" icon="mc.svg" (clicked)="fetchMetadata([i, j])">
+      <dropdown [name]="mc.name ?? 'unnamed'" [kind]="dtypes.MC" [(openCounter)]="openCounter" icon="mc.svg">
         @for (m of mc.measurements; track $index; let k = $index) {
-          <dropdown [name]="m.name ?? 'unnamed'" icon="m.svg" (clicked)="fetchMetadata([i, j, k])">
+          <dropdown [name]="m.name ?? 'unnamed'" [kind]="dtypes.M" [(openCounter)]="openCounter" icon="m.svg">
             @for (s of m.singles; track $index) {
-              <div class="header" (click)="fetchMetadata([i, j, k, s])">
-                <span class="s">S</span>
-                <span>{{s}}</span>
-              </div>
+              <leaf [name]="s" icon="S" [kind]="dtypes.S"></leaf>
             }
             @for (c of m.coinc; track $index) {
-              <div class="header" (click)="fetchMetadata([i, j, k, c])">
-                <span class="c">C</span>
-                <span>{{c}}</span>
-              </div>
+              <leaf [name]="c" icon="C" [kind]="dtypes.C"></leaf>
             }
           </dropdown>
         }

@@ -65,6 +65,8 @@ body {
   background-color: var(--editor-color);
 }
 
-.lm_splitter {
-  background-color: var(--highlighted-menu-color);
+.lm_splitter.lm_horizontal,
+.lm_splitter.lm_vertical {
+  background-color: var(--highlighted-editor-color);
+  opacity: 1;
 }

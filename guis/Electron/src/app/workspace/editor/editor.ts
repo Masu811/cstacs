@@ -1,12 +1,12 @@
 import {
   Component, model, ModelSignal, signal, AfterViewInit, inject,
   EnvironmentInjector, createComponent, Type, inputBinding, Binding,
-  twoWayBinding, ApplicationRef
+  twoWayBinding, ApplicationRef, input
 } from "@angular/core";
 
 import { ComponentContainer, GoldenLayout, LayoutConfig } from 'golden-layout'
 
-import { MultiCampaign } from "../../types";
+import { MultiCampaign, Selection } from "../../types";
 import { Welcome } from "./panels/welcome-panel/welcome";
 import { DataPanel } from "./panels/data-panel/data-panel";
 import { MetadataPanel } from "./panels/metadata-panel/metadata-panel";
@@ -22,6 +22,8 @@ export class Editor implements AfterViewInit {
   projectLoaded = model(false);
   data = model(Array<MultiCampaign>());
   details = signal({});
+
+  availDtypes = input.required<Selection>();
 
   private envInjector = inject(EnvironmentInjector);
 
@@ -65,6 +67,7 @@ export class Editor implements AfterViewInit {
     );
     registerPanel(
       'DataPanelComponent', DataPanel, [
+        inputBinding('availDtypes', this.availDtypes),
         twoWayBinding('data', this.data),
         twoWayBinding('details', this.details),
       ]

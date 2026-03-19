@@ -1,11 +1,16 @@
-.s {
-  color: red;
-  margin: 0 7px;
+div {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
-.c {
-  color: dodgerblue;
-  margin: 0 7px;
+img {
+  height: 1.2em;
+  margin: 2px 5px;
+}
+
+span {
+  text-wrap: nowrap;
 }
 
 .header {

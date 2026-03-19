@@ -11,7 +11,7 @@
   </table>
   <span>General</span>
 </div>
-@if (datatypes().campaigns) {
+@if (availDtypes()[dtypes.M]) {
   <div>
     <table>
       <tbody>
@@ -31,7 +31,7 @@
           <td>Cluster</td>
           <td>Sum</td>
           <td>Plot Metadata</td>
-          @if (datatypes().coinc) {
+          @if (availDtypes()[dtypes.C]) {
             <td>Ratio Plotter</td>
           }
         </tr>
@@ -39,46 +39,44 @@
     </table>
     <span>Campaigns</span>
   </div>
-  @if (datatypes().doppler) {
+  <div>
+    <table>
+      <tbody>
+        <tr>
+          <td>Show Singles</td>
+          <td>Plot Histograms</td>
+        </tr>
+      </tbody>
+    </table>
+    <span>DopplerMeasurements</span>
+  </div>
+  @if (availDtypes()[dtypes.S]) {
     <div>
       <table>
         <tbody>
           <tr>
-            <td>Show Singles</td>
-            <td>Plot Histograms</td>
+            <td>Analyze</td>
+            <td>Calculate Eres</td>
+          </tr>
+          <tr>
+            <td>Calibrate</td>
           </tr>
         </tbody>
       </table>
-      <span>DopplerMeasurements</span>
+      <span>SingleSpectra</span>
     </div>
-    @if (datatypes().single) {
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <td>Analyze</td>
-              <td>Calculate Eres</td>
-            </tr>
-            <tr>
-              <td>Calibrate</td>
-            </tr>
-          </tbody>
-        </table>
-        <span>SingleSpectra</span>
-      </div>
-    }
-    @if (datatypes().coinc) {
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <td>Analyze</td>
-              <td>Coinc S Param</td>
-            </tr>
-          </tbody>
-        </table>
-        <span>CoincidenceSpectra</span>
-      </div>
-    }
+  }
+  @if (availDtypes()[dtypes.C]) {
+    <div>
+      <table>
+        <tbody>
+          <tr>
+            <td>Analyze</td>
+            <td>Coinc S Param</td>
+          </tr>
+        </tbody>
+      </table>
+      <span>CoincidenceSpectra</span>
+    </div>
   }
 }

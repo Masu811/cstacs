@@ -1,0 +1,19 @@
+ul {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  margin: 2px 0;
+  padding: 0;
+}
+
+li {
+  cursor: pointer;
+  border: 1px solid gray;
+  border-radius: 5px;
+  margin: 0 3px;
+  padding: 0 5px;
+}
+
+li:hover {
+  background-color: var(--highlighted-editor-color);
+}

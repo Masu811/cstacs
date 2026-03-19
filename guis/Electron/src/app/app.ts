@@ -3,7 +3,7 @@ import { TopBar } from './workspace/topbar/topbar';
 import { Toolbar } from './workspace/toolbar/toolbar';
 import { Editor } from './workspace/editor/editor';
 import { BottomBar } from './workspace/bottombar/bottombar';
-import { MultiCampaign, Selection } from './types';
+import { MultiCampaign, Selection, Dtype } from './types';
 
 @Component({
   selector: 'app-root',
@@ -16,35 +16,42 @@ export class App {
 
   data = signal(Array<MultiCampaign>());
   projectLoaded = signal(false);
-  datatypes = computed(() => {
+  availDtypes = computed(() => {
     const data = this.data();
 
-    let campaigns = false;
-    let doppler = false;
-    let single = false;
-    let coinc = false;
+    let mult = data.length > 0;
+    let mc = false;
+    let m = false;
+    let s = false;
+    let c = false;
 
-    outer: for (const mult of data) {
-      if (mult.campaigns.length == 0) continue;
+    outer: for (const multCamp of data) {
+      if (multCamp.campaigns.length == 0) continue;
 
-      campaigns = true;
+      mc = true;
 
-      for (const mc of mult.campaigns) {
-        if (mc.measurements.length == 0) continue;
+      for (const measCamp of multCamp.campaigns) {
+        if (measCamp.measurements.length == 0) continue;
 
-        doppler = true;
+        m = true;
 
-        for (const m of mc.measurements) {
-          if (m.singles.length > 0) single = true;
-          if (m.coinc.length > 0) coinc = true;
+        for (const doppler of measCamp.measurements) {
+          if (doppler.singles.length > 0) s = true;
+          if (doppler.coinc.length > 0) c = true;
 
-          if (campaigns && doppler && single && coinc) {
+          if (mult && mc && m && s && c) {
             break outer;
           }
         }
       }
     }
 
-    return { campaigns, doppler, single, coinc } as Selection;
+    return {
+      [Dtype.MULT]: mult,
+      [Dtype.MC]: mc,
+      [Dtype.M]: m,
+      [Dtype.S]: s,
+      [Dtype.C]: c,
+    } as Selection;
   });
 }

@@ -1,0 +1,11 @@
+<ul>
+  @if (availDtypes()[dtypes.MULT]) {
+    <li (click)="toggleDtypeDisplay(dtypes.MULT)">Mult</li>
+  }
+  @if (availDtypes()[dtypes.MC]) {
+    <li (click)="toggleDtypeDisplay(dtypes.MC)">MC</li>
+  }
+  @if (availDtypes()[dtypes.M]) {
+    <li (click)="toggleDtypeDisplay(dtypes.M)">M</li>
+  }
+</ul>

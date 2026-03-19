@@ -17,9 +17,26 @@ export type MultiCampaign = {
   "campaigns": Array<MeasurementCampaign>,
 }
 
+export enum Dtype {
+  MULT,
+  MC,
+  M,
+  S,
+  C,
+}
+
 export type Selection = {
-  campaigns: boolean,
-  doppler: boolean,
-  single: boolean,
-  coinc: boolean,
+  [Dtype.MULT]: boolean,
+  [Dtype.MC]: boolean,
+  [Dtype.M]: boolean,
+  [Dtype.S]: boolean,
+  [Dtype.C]: boolean,
+}
+
+export type DtypeCounter = {
+  [Dtype.MULT]: number,
+  [Dtype.MC]: number,
+  [Dtype.M]: number,
+  [Dtype.S]: number,
+  [Dtype.C]: number,
 }
