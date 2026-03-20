@@ -46,4 +46,8 @@ export class DataPanel extends Panel {
         break;
     }
   }
+
+  select(event: Event, idcs: Array<number | string>) {
+    event.stopPropagation();
+  }
 }

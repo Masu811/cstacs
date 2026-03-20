@@ -1,4 +1,4 @@
-import { Component, input, output, signal, model, effect } from "@angular/core";
+import { Component, input, signal, model, effect, SkipSelf, Optional } from "@angular/core";
 import { Dtype, DtypeCounter } from "../../../../../types";
 
 @Component({
@@ -31,7 +31,22 @@ export class Dropdown {
     this.open.set(this.localToggle());
   });
 
+  parentSelectEffect = effect(() => {
+    if (this.parent) {
+      this.selected.set(this.parent.selected());
+    }
+  })
+  selected = signal(false);
+
+  constructor(@Optional() @SkipSelf() private parent: Dropdown) {
+    this.parent = parent;
+  }
+
   toggleOpen() {
     this.localToggle.update(val => !val);
+  }
+
+  toggleSelect() {
+    this.selected.update(val => !val);
   }
 }
