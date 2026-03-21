@@ -1,0 +1,7 @@
+@if (projectLoaded()) {
+  <data-panel [(data)]="data" [availDtypes]="availDtypes()"></data-panel>
+  <resize-handle appResize></resize-handle>
+  <display-panel></display-panel>
+} @else {
+  <welcome-panel></welcome-panel>
+}

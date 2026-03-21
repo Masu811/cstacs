@@ -1,45 +1,47 @@
-<datatypes [availDtypes]="availDtypes()" [openCounter]="openCounter()" (dtypeToggle)="handleDtypeToggle($event)"></datatypes>
-@for (mult of data(); track $index; let i = $index) {
-  <dropdown
-    [name]="mult.name ?? 'unnamed'"
-    [kind]="dtypes.MULT"
-    [(openCounter)]="openCounter"
-    [globalToggle]="multToggle()"
-    (contextmenu)="select($event, [i])"
-    icon="mult.svg">
-    @for (mc of mult.campaigns; track $index; let j = $index) {
-      <dropdown
-        [name]="mc.name ?? 'unnamed'"
-        [kind]="dtypes.MC"
-        [(openCounter)]="openCounter"
-        [globalToggle]="mcToggle()"
-        (contextmenu)="select($event, [i, j])"
-        icon="mc.svg">
-        @for (m of mc.measurements; track $index; let k = $index) {
-          <dropdown
-            [name]="m.name ?? 'unnamed'"
-            [kind]="dtypes.M"
-            [(openCounter)]="openCounter"
-            [globalToggle]="mToggle()"
-            (contextmenu)="select($event, [i, j, k])"
-            icon="m.svg">
-            @for (s of m.singles; track $index) {
+<div id="container">
+  @for (mult of data(); track $index; let i = $index) {
+    <dropdown
+      [name]="mult.name ?? 'unnamed'"
+      [kind]="dtypes.MULT"
+      [(openCounter)]="openCounter"
+      [globalToggle]="multToggle()"
+      (contextmenu)="select($event, [i])"
+      icon="mult.svg">
+      @for (mc of mult.campaigns; track $index; let j = $index) {
+        <dropdown
+          [name]="mc.name ?? 'unnamed'"
+          [kind]="dtypes.MC"
+          [(openCounter)]="openCounter"
+          [globalToggle]="mcToggle()"
+          (contextmenu)="select($event, [i, j])"
+          icon="mc.svg">
+          @for (m of mc.measurements; track $index; let k = $index) {
+            <dropdown
+              [name]="m.name ?? 'unnamed'"
+              [kind]="dtypes.M"
+              [(openCounter)]="openCounter"
+              [globalToggle]="mToggle()"
+              (contextmenu)="select($event, [i, j, k])"
+              icon="m.svg">
+              @for (s of m.singles; track $index) {
+                <leaf
+                  [name]="s"
+                  [kind]="dtypes.S"
+                  (contextmenu)="select($event, [i, j, k, s])"
+                  icon="S"></leaf>
+              }
+              @for (c of m.coinc; track $index) {
               <leaf
-                [name]="s"
-                [kind]="dtypes.S"
-                (contextmenu)="select($event, [i, j, k, s])"
-                icon="S"></leaf>
-            }
-            @for (c of m.coinc; track $index) {
-            <leaf
-              [name]="c"
-              [kind]="dtypes.C"
-              (contextmenu)="select($event, [i, j, k, c])"
-              icon="C"></leaf>
-            }
-          </dropdown>
-        }
-      </dropdown>
-    }
-  </dropdown>
-}
+                [name]="c"
+                [kind]="dtypes.C"
+                (contextmenu)="select($event, [i, j, k, c])"
+                icon="C"></leaf>
+              }
+            </dropdown>
+          }
+        </dropdown>
+      }
+    </dropdown>
+  }
+</div>
+<datatypes [availDtypes]="availDtypes()" [openCounter]="openCounter()" (dtypeToggle)="handleDtypeToggle($event)"></datatypes>

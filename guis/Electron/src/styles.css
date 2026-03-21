@@ -20,6 +20,19 @@ body {
   font-size: 0.95em;
 }
 
+::-webkit-scrollbar {
+  background: transparent;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--highlighted-editor-color);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .lm_header {
   background-color: var(--menu-color);
 }

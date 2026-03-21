@@ -2,6 +2,6 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
   background-color: var(--editor-color);
 }

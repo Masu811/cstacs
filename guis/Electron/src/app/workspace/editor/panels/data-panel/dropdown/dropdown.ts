@@ -8,8 +8,9 @@ import { Dtype, DtypeCounter } from "../../../../../types";
 })
 export class Dropdown {
   name = input("unnamed");
-  kind = input.required<Dtype>();
   icon = input("");
+  kind = input.required<Dtype>();
+
   openCounter = model.required<DtypeCounter>();
   open = signal(false);
   counterEffect = effect(() => {
@@ -32,21 +33,38 @@ export class Dropdown {
   });
 
   parentSelectEffect = effect(() => {
-    if (this.parent) {
-      this.selected.set(this.parent.selected());
+    if (!this.parent) return;
+
+    if (this.parent.selected()) {
+      this.selected.set(true);
+    } else if (this.parent.manuallySelected) {
+      this.manuallySelected = true;
+      this.selected.set(false);
     }
-  })
+  });
+  childSelectEffect = effect(() => {
+    if (!this.parent) return;
+
+    if (!this.selected() && !this.manuallySelected) {
+      this.parent.manuallySelected = false;
+      this.parent.selected.set(false);
+    }
+  });
+  manuallySelected = false;
   selected = signal(false);
 
-  constructor(@Optional() @SkipSelf() private parent: Dropdown) {
-    this.parent = parent;
-  }
+  constructor(@Optional() @SkipSelf() private parent: Dropdown) { }
 
   toggleOpen() {
     this.localToggle.update(val => !val);
   }
 
   toggleSelect() {
+    this.manuallySelected = true;
     this.selected.update(val => !val);
+    if (this.parent?.selected() && !this.selected()) {
+      this.parent.manuallySelected = false;
+      this.parent.selected.set(false);
+    }
   }
 }

@@ -26,9 +26,7 @@
               }
             ],
             "styles": [
-              "src/styles.css",
-              "node_modules/golden-layout/dist/css/goldenlayout-base.css",
-              "node_modules/golden-layout/dist/css/themes/goldenlayout-dark-theme.css"
+              "src/styles.css"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",

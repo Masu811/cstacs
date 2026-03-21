@@ -30,7 +30,6 @@
     "@types/plotly.js-dist-min": "^2.3.4",
     "electron-squirrel-startup": "^1.0.1",
     "express": "^5.1.0",
-    "golden-layout": "^2.6.0",
     "node-os-utils": "^2.0.1",
     "plotly.js-dist-min": "^3.4.0",
     "rxjs": "~7.8.0",

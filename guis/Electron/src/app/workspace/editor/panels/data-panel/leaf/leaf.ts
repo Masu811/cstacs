@@ -14,15 +14,30 @@ export class Leaf {
   dtypes = Dtype;
 
   parentSelectEffect = effect(() => {
-    this.selected.set(this.parent.selected());
-  })
+    if (this.parent.selected()) {
+      this.selected.set(true);
+    } else if (this.parent.manuallySelected) {
+      this.manuallySelected = true;
+      this.selected.set(false);
+    }
+  });
+  childSelectEffect = effect(() => {
+    if (!this.selected() && !this.manuallySelected) {
+      this.parent.manuallySelected = false;
+      this.parent.selected.set(false);
+    }
+  });
+  manuallySelected = false;
   selected = signal(false);
 
-  constructor(@SkipSelf() private parent: Dropdown) {
-    this.parent = parent;
-  }
+  constructor(@SkipSelf() private parent: Dropdown) { }
 
   toggleSelect() {
+    this.manuallySelected = true;
     this.selected.update(val => !val);
+    if (this.parent.selected() && !this.selected()) {
+      this.parent.manuallySelected = false;
+      this.parent.selected.set(false);
+    }
   }
 }

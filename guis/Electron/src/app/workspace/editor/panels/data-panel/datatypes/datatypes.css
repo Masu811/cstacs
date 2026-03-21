@@ -4,14 +4,13 @@ ul {
   flex-direction: row;
   margin: 2px 0;
   padding: 0;
+  border-top: 1px solid var(--highlighted-editor-color);
 }
 
 li {
+  flex: 1;
   cursor: pointer;
-  border: 1px solid gray;
-  border-radius: 5px;
-  margin: 0 3px;
-  padding: 0 5px;
+  text-align: center;
 }
 
 li:hover {

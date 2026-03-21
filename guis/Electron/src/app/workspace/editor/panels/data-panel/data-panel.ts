@@ -1,4 +1,4 @@
-import { Component, model, input, signal, output, computed, ChangeDetectorRef } from "@angular/core";
+import { Component, model, input, signal, computed } from "@angular/core";
 import { Panel } from "../panel";
 import { Dropdown } from "./dropdown/dropdown";
 import { MultiCampaign, Selection, Dtype, DtypeCounter } from "../../../../types";
@@ -27,11 +27,6 @@ export class DataPanel extends Panel {
   multToggle = signal([false]);
   mcToggle = signal([false]);
   mToggle = signal([false]);
-
-  constructor(private ref: ChangeDetectorRef) {
-    super();
-    this.ref = ref;
-  }
 
   handleDtypeToggle(type: Dtype) {
     switch (type) {
