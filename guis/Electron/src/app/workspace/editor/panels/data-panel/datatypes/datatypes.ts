@@ -1,5 +1,5 @@
 import { Component, input, model, output } from "@angular/core";
-import { Dtype, DtypeCounter, Selection } from "../../../../../types";
+import { Dtype, DtypeCounter, DtypeToggle } from "../../../../../types";
 
 @Component({
   selector: "datatypes",
@@ -8,7 +8,7 @@ import { Dtype, DtypeCounter, Selection } from "../../../../../types";
 })
 export class Datatypes {
   dtypes = Dtype;
-  availDtypes = input.required<Selection>();
+  availDtypes = input.required<DtypeToggle>();
   openCounter = input.required<DtypeCounter>();
   dtypeToggle = output<Dtype>();
 

@@ -3,57 +3,65 @@
     <tbody>
       <tr>
         <td (click)="importData()">Import</td>
-        <td>Show Metadata</td>
-        <td>Select</td>
+        @if (projectLoaded()) {
+          <td>Create</td>
+        }
       </tr>
-      <tr>
-        <td>Create</td>
-        <td>Delete</td>
-      </tr>
+      @if (projectLoaded()) {
+        <tr>
+          <td>Select</td>
+          @if (anySelected()) {
+            <td>Delete</td>
+          }
+        </tr>
+      }
     </tbody>
   </table>
   <span>General</span>
 </div>
 @if (availDtypes()[dtypes.M]) {
-  <div>
-    <table>
-      <tbody>
-        <tr>
-          <td>Parse</td>
-          <td>Filter</td>
-          <td>Split</td>
-          <td>Derive</td>
-          <td>Average</td>
-          <td>Normalize</td>
-          <td>Plot</td>
-        </tr>
-        <tr>
-          <td>Print</td>
-          <td>Sort</td>
-          <td>Merge</td>
-          <td>Cluster</td>
-          <td>Sum</td>
-          <td>Plot Metadata</td>
-          @if (availDtypes()[dtypes.C]) {
-            <td>Ratio Plotter</td>
-          }
-        </tr>
-      </tbody>
-    </table>
-    <span>Campaigns</span>
-  </div>
-  <div>
-    <table>
-      <tbody>
-        <tr>
-          <td>Show Singles</td>
-          <td>Plot Histograms</td>
-        </tr>
-      </tbody>
-    </table>
-    <span>DopplerMeasurements</span>
-  </div>
-  @if (availDtypes()[dtypes.S]) {
+  @if (selection()[dtypes.MC]) {
+    <div>
+      <table>
+        <tbody>
+          <tr>
+            <td>Parse</td>
+            <td>Filter</td>
+            <td>Split</td>
+            <td>Derive</td>
+            <td>Average</td>
+            <td>Normalize</td>
+            <td>Plot</td>
+          </tr>
+          <tr>
+            <td>Print</td>
+            <td>Sort</td>
+            <td>Merge</td>
+            <td>Cluster</td>
+            <td>Sum</td>
+            <td>Plot Metadata</td>
+            @if (selection()[dtypes.C] > 1) {
+              <td>Ratio Plotter</td>
+            }
+          </tr>
+        </tbody>
+      </table>
+      <span>Campaigns</span>
+    </div>
+  }
+  @if (selection()[dtypes.M] == 1) {
+    <div>
+      <table>
+        <tbody>
+          <tr>
+            <td>Show Metadata</td>
+          </tr>
+        </tbody>
+      </table>
+      <span>DopplerMeasurements</span>
+    </div>
+  }
+  @if (selection()[dtypes.S]) {
     <div>
       <table>
         <tbody>
@@ -63,18 +71,26 @@
           </tr>
           <tr>
             <td>Calibrate</td>
+            @if (selection()[dtypes.S] == 1) {
+              <td>Show Metadata</td>
+            }
           </tr>
         </tbody>
       </table>
       <span>SingleSpectra</span>
     </div>
   }
-  @if (availDtypes()[dtypes.C]) {
+  @if (selection()[dtypes.C]) {
     <div>
       <table>
         <tbody>
           <tr>
             <td>Analyze</td>
+            @if (selection()[dtypes.C] == 1) {
+              <td>Show Metadata</td>
+            }
+          </tr>
+          <tr>
             <td>Coinc S Param</td>
           </tr>
         </tbody>

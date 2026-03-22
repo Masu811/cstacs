@@ -11,6 +11,8 @@ export class Dropdown {
   icon = input("");
   kind = input.required<Dtype>();
 
+  selection = model.required<DtypeCounter>();
+
   openCounter = model.required<DtypeCounter>();
   open = signal(false);
   counterEffect = effect(() => {
@@ -49,6 +51,15 @@ export class Dropdown {
       this.parent.manuallySelected = false;
       this.parent.selected.set(false);
     }
+  });
+  selectEffect = effect(() => {
+    this.selection.update(oldSelection => {
+      const oldValue = oldSelection[this.kind()];
+      return {
+        ...oldSelection,
+        [this.kind()]: Math.max(0, oldValue + (this.selected() ? 1 : -1)),
+      };
+    });
   });
   manuallySelected = false;
   selected = signal(false);

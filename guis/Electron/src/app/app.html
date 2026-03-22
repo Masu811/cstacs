@@ -1,6 +1,6 @@
 <main>
   <topbar></topbar>
-  <toolbar [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()"></toolbar>
-  <editor id="editor" [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()"></editor>
-  <bottombar></bottombar>
+  <toolbar [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [selection]="selection()"></toolbar>
+  <editor id="editor" [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [(selection)]="selection"></editor>
+  <bottombar [selection]="selection()"></bottombar>
 </main>

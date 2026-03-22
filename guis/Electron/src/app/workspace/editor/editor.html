@@ -1,5 +1,5 @@
 @if (projectLoaded()) {
-  <data-panel [(data)]="data" [availDtypes]="availDtypes()"></data-panel>
+  <data-panel [(data)]="data" [availDtypes]="availDtypes()" [(selection)]="selection"></data-panel>
   <resize-handle appResize></resize-handle>
   <display-panel></display-panel>
 } @else {

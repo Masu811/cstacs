@@ -5,7 +5,7 @@
       [kind]="dtypes.MULT"
       [(openCounter)]="openCounter"
       [globalToggle]="multToggle()"
-      (contextmenu)="select($event, [i])"
+      [(selection)]="selection"
       icon="mult.svg">
       @for (mc of mult.campaigns; track $index; let j = $index) {
         <dropdown
@@ -13,7 +13,7 @@
           [kind]="dtypes.MC"
           [(openCounter)]="openCounter"
           [globalToggle]="mcToggle()"
-          (contextmenu)="select($event, [i, j])"
+          [(selection)]="selection"
           icon="mc.svg">
           @for (m of mc.measurements; track $index; let k = $index) {
             <dropdown
@@ -21,21 +21,21 @@
               [kind]="dtypes.M"
               [(openCounter)]="openCounter"
               [globalToggle]="mToggle()"
-              (contextmenu)="select($event, [i, j, k])"
+              [(selection)]="selection"
               icon="m.svg">
               @for (s of m.singles; track $index) {
                 <leaf
                   [name]="s"
                   [kind]="dtypes.S"
-                  (contextmenu)="select($event, [i, j, k, s])"
+                  [(selection)]="selection"
                   icon="S"></leaf>
               }
               @for (c of m.coinc; track $index) {
-              <leaf
-                [name]="c"
-                [kind]="dtypes.C"
-                (contextmenu)="select($event, [i, j, k, c])"
-                icon="C"></leaf>
+                <leaf
+                  [name]="c"
+                  [kind]="dtypes.C"
+                  [(selection)]="selection"
+                  icon="C"></leaf>
               }
             </dropdown>
           }

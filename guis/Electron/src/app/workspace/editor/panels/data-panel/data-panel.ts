@@ -1,7 +1,7 @@
 import { Component, model, input, signal, computed } from "@angular/core";
 import { Panel } from "../panel";
 import { Dropdown } from "./dropdown/dropdown";
-import { MultiCampaign, Selection, Dtype, DtypeCounter } from "../../../../types";
+import { MultiCampaign, Dtype, DtypeCounter, DtypeToggle } from "../../../../types";
 import { Datatypes } from "./datatypes/datatypes";
 import { Leaf } from "./leaf/leaf";
 
@@ -15,7 +15,10 @@ export class DataPanel extends Panel {
   data = model(Array<MultiCampaign>());
 
   dtypes = Dtype;
-  availDtypes = input.required<Selection>();
+  availDtypes = input.required<DtypeToggle>();
+
+  selection = model.required<DtypeCounter>();
+
   openCounter = signal({
     [Dtype.MULT]: 0,
     [Dtype.MC]: 0,

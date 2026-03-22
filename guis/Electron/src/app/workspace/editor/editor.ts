@@ -1,6 +1,6 @@
 import { Component, model, input } from "@angular/core";
 
-import { MultiCampaign, Selection } from "../../types";
+import { MultiCampaign, DtypeToggle, DtypeCounter } from "../../types";
 import { Welcome } from "./panels/welcome-panel/welcome";
 import { DataPanel } from "./panels/data-panel/data-panel";
 import { DisplayPanel } from "./panels/display-panel/display-panel";
@@ -16,5 +16,7 @@ export class Editor {
   projectLoaded = model(false);
   data = model(Array<MultiCampaign>());
 
-  availDtypes = input.required<Selection>();
+  availDtypes = input.required<DtypeToggle>();
+
+  selection = model.required<DtypeCounter>();
 }

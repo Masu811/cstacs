@@ -1,6 +1,11 @@
 <div>
 </div>
 <div>
+  <span>Mult: {{selection()[dtypes.MULT]}}</span>
+  <span>MC: {{selection()[dtypes.MC]}}</span>
+  <span>M: {{selection()[dtypes.M]}}</span>
+  <span>S: {{selection()[dtypes.S]}}</span>
+  <span>C: {{selection()[dtypes.C]}}</span>
   <div class="okIndicator" [class.ok]="isServerOk()"></div>
   <span>CPU:</span>
   <span>{{cpu()}}</span>

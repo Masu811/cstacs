@@ -25,7 +25,7 @@ export enum Dtype {
   C,
 }
 
-export type Selection = {
+export type DtypeToggle = {
   [Dtype.MULT]: boolean,
   [Dtype.MC]: boolean,
   [Dtype.M]: boolean,

@@ -3,7 +3,7 @@ import { TopBar } from './workspace/topbar/topbar';
 import { Toolbar } from './workspace/toolbar/toolbar';
 import { Editor } from './workspace/editor/editor';
 import { BottomBar } from './workspace/bottombar/bottombar';
-import { MultiCampaign, Selection, Dtype } from './types';
+import { MultiCampaign, DtypeToggle, Dtype, DtypeCounter } from './types';
 
 @Component({
   selector: 'app-root',
@@ -52,6 +52,14 @@ export class App {
       [Dtype.M]: m,
       [Dtype.S]: s,
       [Dtype.C]: c,
-    } as Selection;
+    } as DtypeToggle;
   });
+
+  selection = signal({
+    [Dtype.MULT]: 0,
+    [Dtype.MC]: 0,
+    [Dtype.M]: 0,
+    [Dtype.S]: 0,
+    [Dtype.C]: 0,
+  } as DtypeCounter);
 }
