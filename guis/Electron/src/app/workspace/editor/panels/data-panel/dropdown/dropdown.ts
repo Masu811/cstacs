@@ -1,5 +1,5 @@
 import { Component, input, signal, model, effect, SkipSelf, Optional } from "@angular/core";
-import { Dtype, DtypeCounter } from "../../../../../types";
+import { Dtype, DtypeCounter, DtypeSelection } from "../../../../../types";
 
 @Component({
   selector: "dropdown",
@@ -10,8 +10,9 @@ export class Dropdown {
   name = input("unnamed");
   icon = input("");
   kind = input.required<Dtype>();
+  id = input.required<string>();
 
-  selection = model.required<DtypeCounter>();
+  selection = model.required<DtypeSelection>();
 
   openCounter = model.required<DtypeCounter>();
   open = signal(false);
@@ -53,11 +54,19 @@ export class Dropdown {
     }
   });
   selectEffect = effect(() => {
-    this.selection.update(oldSelection => {
-      const oldValue = oldSelection[this.kind()];
+    const isSelected = this.selected();
+    const id = this.id();
+    const kind = this.kind();
+
+    this.selection.update(old => {
+      const set = new Set(old[kind]);
+
+      if (isSelected) set.add(id);
+      else set.delete(id);
+
       return {
-        ...oldSelection,
-        [this.kind()]: Math.max(0, oldValue + (this.selected() ? 1 : -1)),
+        ...old,
+        [kind]: set,
       };
     });
   });

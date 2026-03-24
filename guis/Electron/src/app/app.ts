@@ -3,7 +3,7 @@ import { TopBar } from './workspace/topbar/topbar';
 import { Toolbar } from './workspace/toolbar/toolbar';
 import { Editor } from './workspace/editor/editor';
 import { BottomBar } from './workspace/bottombar/bottombar';
-import { MultiCampaign, DtypeToggle, Dtype, DtypeCounter } from './types';
+import { MultiCampaign, DtypeToggle, Dtype, DtypeCounter, Metadata, DtypeSelection } from './types';
 
 @Component({
   selector: 'app-root',
@@ -56,10 +56,12 @@ export class App {
   });
 
   selection = signal({
-    [Dtype.MULT]: 0,
-    [Dtype.MC]: 0,
-    [Dtype.M]: 0,
-    [Dtype.S]: 0,
-    [Dtype.C]: 0,
-  } as DtypeCounter);
+    [Dtype.MULT]: new Set<string>([]),
+    [Dtype.MC]: new Set<string>([]),
+    [Dtype.M]: new Set<string>([]),
+    [Dtype.S]: new Set<string>([]),
+    [Dtype.C]: new Set<string>([]),
+  } as DtypeSelection);
+
+  metadata: WritableSignal<Metadata | null> = signal(null);
 }

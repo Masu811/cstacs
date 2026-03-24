@@ -1,5 +1,5 @@
 import { Component, signal, input } from "@angular/core";
-import { Dtype, DtypeCounter } from "../../types";
+import { Dtype, DtypeCounter, DtypeSelection, DtypeToggle } from "../../types";
 
 @Component({
   selector: "bottombar",
@@ -12,7 +12,8 @@ export class BottomBar {
   ram = signal("");
   ws: null | WebSocket = null;
 
-  selection = input.required<DtypeCounter>();
+  availDtypes = input.required<DtypeToggle>();
+  selection = input.required<DtypeSelection>();
   dtypes = Dtype;
 
   private readonly checkServerIntervalMilliSec = 3000;

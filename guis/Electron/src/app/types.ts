@@ -40,3 +40,15 @@ export type DtypeCounter = {
   [Dtype.S]: number,
   [Dtype.C]: number,
 }
+
+export type DtypeSelection = {
+  [Dtype.MULT]: Set<string>,
+  [Dtype.MC]: Set<string>,
+  [Dtype.M]: Set<string>,
+  [Dtype.S]: Set<string>,
+  [Dtype.C]: Set<string>,
+}
+
+export type Metadata = {
+  __name__: string,
+}

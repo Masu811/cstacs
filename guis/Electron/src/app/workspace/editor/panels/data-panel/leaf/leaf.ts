@@ -1,5 +1,5 @@
 import { Component, input, signal, effect, SkipSelf, model } from "@angular/core";
-import { Dtype, DtypeCounter } from "../../../../../types";
+import { Dtype, DtypeCounter, DtypeSelection } from "../../../../../types";
 import { Dropdown } from "../dropdown/dropdown";
 
 @Component({
@@ -12,8 +12,9 @@ export class Leaf {
   icon = input("");
   kind = model.required<Dtype>();
   dtypes = Dtype;
+  id = input.required<string>();
 
-  selection = model.required<DtypeCounter>();
+  selection = model.required<DtypeSelection>();
 
   parentSelectEffect = effect(() => {
     if (this.parent.selected()) {
@@ -30,11 +31,19 @@ export class Leaf {
     }
   });
   selectEffect = effect(() => {
-    this.selection.update(oldSelection => {
-      const oldValue = oldSelection[this.kind()];
+    const isSelected = this.selected();
+    const id = this.id();
+    const kind = this.kind();
+
+    this.selection.update(old => {
+      const set = new Set(old[kind]);
+
+      if (isSelected) set.add(id);
+      else set.delete(id);
+
       return {
-        ...oldSelection,
-        [this.kind()]: Math.max(0, oldValue + (this.selected() ? 1 : -1)),
+        ...old,
+        [kind]: set,
       };
     });
   });

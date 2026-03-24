@@ -1,6 +1,7 @@
 <div id="container">
   @for (mult of data(); track $index; let i = $index) {
     <dropdown
+      [id]="[i].toString()"
       [name]="mult.name ?? 'unnamed'"
       [kind]="dtypes.MULT"
       [(openCounter)]="openCounter"
@@ -9,6 +10,7 @@
       icon="mult.svg">
       @for (mc of mult.campaigns; track $index; let j = $index) {
         <dropdown
+          [id]="[i, j].toString()"
           [name]="mc.name ?? 'unnamed'"
           [kind]="dtypes.MC"
           [(openCounter)]="openCounter"
@@ -17,6 +19,7 @@
           icon="mc.svg">
           @for (m of mc.measurements; track $index; let k = $index) {
             <dropdown
+              [id]="[i, j, k].toString()"
               [name]="m.name ?? 'unnamed'"
               [kind]="dtypes.M"
               [(openCounter)]="openCounter"
@@ -25,6 +28,7 @@
               icon="m.svg">
               @for (s of m.singles; track $index) {
                 <leaf
+                  [id]="[i, j, k, s].toString()"
                   [name]="s"
                   [kind]="dtypes.S"
                   [(selection)]="selection"
@@ -32,6 +36,7 @@
               }
               @for (c of m.coinc; track $index) {
                 <leaf
+                  [id]="[i, j, k, c].toString()"
                   [name]="c"
                   [kind]="dtypes.C"
                   [(selection)]="selection"

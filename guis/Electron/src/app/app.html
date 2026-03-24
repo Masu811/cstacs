@@ -2,5 +2,5 @@
   <topbar></topbar>
   <toolbar [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [selection]="selection()"></toolbar>
   <editor id="editor" [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [(selection)]="selection"></editor>
-  <bottombar [selection]="selection()"></bottombar>
+  <bottombar [availDtypes]="availDtypes()" [selection]="selection()"></bottombar>
 </main>

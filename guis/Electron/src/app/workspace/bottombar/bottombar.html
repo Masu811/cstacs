@@ -1,11 +1,15 @@
 <div>
 </div>
 <div>
-  <span>Mult: {{selection()[dtypes.MULT]}}</span>
-  <span>MC: {{selection()[dtypes.MC]}}</span>
-  <span>M: {{selection()[dtypes.M]}}</span>
-  <span>S: {{selection()[dtypes.S]}}</span>
-  <span>C: {{selection()[dtypes.C]}}</span>
+  <span>Mult: {{selection()[dtypes.MULT].size}}</span>
+  <span>MC: {{selection()[dtypes.MC].size}}</span>
+  <span>M: {{selection()[dtypes.M].size}}</span>
+  @if (availDtypes()[dtypes.S]) {
+    <span>S: {{selection()[dtypes.S].size}}</span>
+  }
+  @if (availDtypes()[dtypes.C]) {
+    <span>C: {{selection()[dtypes.C].size}}</span>
+  }
   <div class="okIndicator" [class.ok]="isServerOk()"></div>
   <span>CPU:</span>
   <span>{{cpu()}}</span>
