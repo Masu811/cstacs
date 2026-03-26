@@ -63,5 +63,7 @@ export class App {
     [Dtype.C]: new Set<string>([]),
   } as DtypeSelection);
 
+  deselect = signal(false);
+
   metadata: WritableSignal<Metadata | null> = signal(null);
 }

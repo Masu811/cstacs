@@ -7,6 +7,7 @@
       [(openCounter)]="openCounter"
       [globalToggle]="multToggle()"
       [(selection)]="selection"
+      [deselect]="deselect()"
       icon="mult.svg">
       @for (mc of mult.campaigns; track $index; let j = $index) {
         <dropdown
@@ -16,6 +17,7 @@
           [(openCounter)]="openCounter"
           [globalToggle]="mcToggle()"
           [(selection)]="selection"
+          [deselect]="deselect()"
           icon="mc.svg">
           @for (m of mc.measurements; track $index; let k = $index) {
             <dropdown
@@ -25,6 +27,7 @@
               [(openCounter)]="openCounter"
               [globalToggle]="mToggle()"
               [(selection)]="selection"
+              [deselect]="deselect()"
               icon="m.svg">
               @for (s of m.singles; track $index) {
                 <leaf
@@ -32,6 +35,7 @@
                   [name]="s"
                   [kind]="dtypes.S"
                   [(selection)]="selection"
+                  [deselect]="deselect()"
                   icon="S"></leaf>
               }
               @for (c of m.coinc; track $index) {
@@ -40,6 +44,7 @@
                   [name]="c"
                   [kind]="dtypes.C"
                   [(selection)]="selection"
+                  [deselect]="deselect()"
                   icon="C"></leaf>
               }
             </dropdown>

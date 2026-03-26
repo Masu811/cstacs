@@ -19,4 +19,5 @@ export class Editor {
   availDtypes = input.required<DtypeToggle>();
 
   selection = model.required<DtypeSelection>();
+  deselect = input.required<boolean>();
 }

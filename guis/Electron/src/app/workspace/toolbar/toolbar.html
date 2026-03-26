@@ -11,7 +11,7 @@
         <tr>
           <td>Select</td>
           @if (anySelected()) {
-            <td>Delete</td>
+            <td (click)="deleteData()">Delete</td>
           }
         </tr>
       }

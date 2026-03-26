@@ -18,11 +18,11 @@ export type MultiCampaign = {
 }
 
 export enum Dtype {
-  MULT,
-  MC,
-  M,
-  S,
-  C,
+  MULT = "MULT",
+  MC = "MC",
+  M = "M",
+  S = "S",
+  C = "C"
 }
 
 export type DtypeToggle = {

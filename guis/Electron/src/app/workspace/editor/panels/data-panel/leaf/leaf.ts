@@ -15,6 +15,7 @@ export class Leaf {
   id = input.required<string>();
 
   selection = model.required<DtypeSelection>();
+  deselect = input.required<boolean>();
 
   parentSelectEffect = effect(() => {
     if (this.parent.selected()) {
@@ -47,6 +48,10 @@ export class Leaf {
       };
     });
   });
+  deselectEffect = effect(() => {
+    this.deselect();
+    this.selected.set(false);
+  })
   manuallySelected = false;
   selected = signal(false);
 

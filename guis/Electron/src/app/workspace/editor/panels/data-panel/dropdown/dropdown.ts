@@ -13,6 +13,7 @@ export class Dropdown {
   id = input.required<string>();
 
   selection = model.required<DtypeSelection>();
+  deselect = input.required<boolean>();
 
   openCounter = model.required<DtypeCounter>();
   open = signal(false);
@@ -70,6 +71,10 @@ export class Dropdown {
       };
     });
   });
+  deselectEffect = effect(() => {
+    this.deselect();
+    this.selected.set(false);
+  })
   manuallySelected = false;
   selected = signal(false);
 

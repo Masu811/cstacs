@@ -18,6 +18,7 @@ export class DataPanel extends Panel {
   availDtypes = input.required<DtypeToggle>();
 
   selection = model.required<DtypeSelection>();
+  deselect = input.required<boolean>();
 
   openCounter = signal({
     [Dtype.MULT]: 0,

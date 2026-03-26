@@ -15,7 +15,8 @@ export class Toolbar {
   availDtypes = input.required<DtypeToggle>();
   dtypes = Dtype;
 
-  selection = input.required<DtypeSelection>();
+  selection = model.required<DtypeSelection>();
+  deselect = model.required<boolean>();
 
   anySelected = computed(() => {
     return Object.values(this.selection()).some(val => val);
@@ -31,10 +32,39 @@ export class Toolbar {
     }
 
     const response = await fetch(`http://127.0.0.1:8000/import_data?path=${path}`);
-    const newData = await response.json() as MultiCampaign;
+    const newData = await response.json() as Array<MultiCampaign>;
 
-    this.data.update(oldData => [...oldData, newData]);
+    this.data.set(newData);
     this.projectLoaded.set(true);
+  }
+
+  async deleteData() {
+    const payload = Object.fromEntries(
+      Object.entries(this.selection()).map(([key, value]) => [
+        key,
+        Array.from(value)
+      ])
+    );
+
+    const response = await fetch("http://127.0.0.1:8000/delete_data", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const newData = await response.json() as Array<MultiCampaign>;
+
+    this.deselect.update(val => !val);
+    this.selection.set({
+      [Dtype.MULT]: new Set<string>([]),
+      [Dtype.MC]: new Set<string>([]),
+      [Dtype.M]: new Set<string>([]),
+      [Dtype.S]: new Set<string>([]),
+      [Dtype.C]: new Set<string>([]),
+    } as DtypeSelection);
+    this.data.set(newData);
   }
 
   async fetchMetadata(kind: Dtype) {
