@@ -1,18 +1,21 @@
-from pathlib import Path
 from enum import Enum
+from typing import TypedDict
+from dataclasses import dataclass, asdict
 
 import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
-from pydantic.dataclasses import dataclass
 
 from stacs.coinc import CoincidenceSpectrum
 from stacs.single import SingleSpectrum
 from stacs import MultiCampaign, MeasurementCampaign, DopplerMeasurement
 
+
 data: list[MultiCampaign] = []
 
+
 app = FastAPI()
+
 
 @app.websocket("/health")
 async def health(websocket: WebSocket):
@@ -23,6 +26,7 @@ async def health(websocket: WebSocket):
     except (WebSocketDisconnect, RuntimeError):
         print("Client disconnected")
         pass
+
 
 def tree(m: MultiCampaign | MeasurementCampaign | DopplerMeasurement):
     if isinstance(m, DopplerMeasurement):
@@ -43,6 +47,7 @@ def tree(m: MultiCampaign | MeasurementCampaign | DopplerMeasurement):
         "campaigns": [tree(n) for n in m]
     }
 
+
 @app.get("/import_data")
 def import_data(path: str):
     mult = MultiCampaign(
@@ -53,6 +58,7 @@ def import_data(path: str):
     data.append(mult)
     return JSONResponse([tree(t) for t in data])
 
+
 class Dtype(Enum):
     MULT = "MULT"
     MC = "MC"
@@ -60,72 +66,104 @@ class Dtype(Enum):
     S = "S"
     C = "C"
 
-def selection_to_idcs(selection):
-    fields = selection.split(",")
 
-    types = [int, int, int, str]
+Selection = dict[Dtype, list[str]]
 
-    out = []
 
-    for field, type in zip(fields, types):
-        out.append(type(field))
+class ParsedSelection(TypedDict):
+    MULT: list[tuple[int]]
+    MC: list[tuple[int, int]]
+    M: list[tuple[int, int, int]]
+    S: list[tuple[int, int, int, str]]
+    C: list[tuple[int, int, int, str]]
 
-    return out
+
+ParsedIndices = tuple[int] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, str]
+
+
+selection_types = [int, int, int, str]
+
+
+def parse_single_selection(idcs: str) -> ParsedIndices:
+    fields = idcs.split("-")
+    parsed_idcs = []
+
+    for field, type in zip(fields, selection_types):
+        parsed_idcs.append(type(field))
+
+    return tuple(parsed_idcs)
+
+
+def parse_selection(selection: Selection) -> ParsedSelection:
+    parsed_selection: ParsedSelection = {
+        "MULT": [],
+        "MC": [],
+        "M": [],
+        "S": [],
+        "C": [],
+    }
+
+    for dtype, idx_arr in selection.items():
+        for str_idcs in idx_arr:
+            parsed_selection[dtype.value].append(parse_single_selection(str_idcs))
+
+    return parsed_selection
+
 
 @app.post("/delete_data")
-def delete_data(selection: dict[Dtype, list[str]]):
-    remove_mult = sorted(
-        [selection_to_idcs(x) for x in selection[Dtype.MULT]],
+def delete_data(selection: Selection):
+    parsed_selection = parse_selection(selection)
+
+    remove_mult: list[tuple[int]] = sorted(
+        parsed_selection["MULT"],
         key=lambda x: x[0],
         reverse=True,
     )
 
-    remove_mc = sorted(
+    remove_mc: list[tuple[int, int]] = sorted(
         filter(
             lambda x: (
-                not any (x[0] == y[0] for y in remove_mult)
+                not any(x[0] == y[0] for y in remove_mult)
             ),
-           [selection_to_idcs(x) for x in selection[Dtype.MC]]
+           parsed_selection["MC"]
         ),
         key=lambda x: x[1],
         reverse=True,
     )
 
-    remove_m = sorted(
+    remove_m: list[tuple[int, int, int]] = sorted(
         filter(
             lambda x: (
-                not any (x[0] == y[0] for y in remove_mult)
+                not any(x[0] == y[0] for y in remove_mult)
                 and not any(x[0] == y[0] and x[1] == y[1] for y in remove_mc)
             ),
-           [selection_to_idcs(x) for x in selection[Dtype.M]]
+           parsed_selection["M"]
         ),
         key=lambda x: x[2],
         reverse=True,
     )
 
-    remove_s = sorted(
+    remove_s: list[tuple[int, int, int, str]] = sorted(
         filter(
             lambda x: (
-                not any (x[0] == y[0] for y in remove_mult)
+                not any(x[0] == y[0] for y in remove_mult)
                 and not any(x[0] == y[0] and x[1] == y[1] for y in remove_mc)
                 and not any(x[0] == y[0] and x[1] == y[1] and x[2] == y[2] for y in remove_m)
             ),
-           [selection_to_idcs(x) for x in selection[Dtype.S]]
+           parsed_selection["S"]
         )
     )
 
-    remove_c = sorted(
+    remove_c: list[tuple[int, int, int, str]] = sorted(
         filter(
             lambda x: (
-                not any (x[0] == y[0] for y in remove_mult)
+                not any(x[0] == y[0] for y in remove_mult)
                 and not any(x[0] == y[0] and x[1] == y[1] for y in remove_mc)
                 and not any(x[0] == y[0] and x[1] == y[1] and x[2] == y[2] for y in remove_m)
             ),
-           [selection_to_idcs(x) for x in selection[Dtype.C]]
+           parsed_selection["C"]
         )
     )
-
-    print(len(remove_mult), len(remove_mc), len(remove_m), len(remove_s))
 
     for idcs in remove_s:
         m = data[idcs[0]][idcs[1]][idcs[2]]
@@ -152,6 +190,7 @@ def delete_data(selection: dict[Dtype, list[str]]):
 def scalarize(x):
     return str(np.array(x).tolist())
 
+
 def mult_to_json(x: MultiCampaign):
     vals = [
         "name", "path", "directory"
@@ -159,6 +198,7 @@ def mult_to_json(x: MultiCampaign):
     return {"__name__": "MultiCampaign"} | {
         val: scalarize(getattr(x, val)) for val in vals
     } | {"length": len(x)}
+
 
 def mc_to_json(x: MeasurementCampaign):
     vals = [
@@ -168,6 +208,7 @@ def mc_to_json(x: MeasurementCampaign):
         val: scalarize(getattr(x, val)) for val in vals
     } | {"length": len(x)}
 
+
 def m_to_json(x: DopplerMeasurement):
     vals = [
         "name", "path", "directory", "filename", "filetype"
@@ -175,6 +216,7 @@ def m_to_json(x: DopplerMeasurement):
     return {"__name__": "DopplerMeasurement"} | {
         val: scalarize(getattr(x, val)) for val in vals
     } | {key: str(val) for key, val in x.metadata.items()}
+
 
 def s_to_json(x: SingleSpectrum):
     vals = [
@@ -185,6 +227,7 @@ def s_to_json(x: SingleSpectrum):
         val: scalarize(getattr(x, val)) for val in vals
     }
 
+
 def c_to_json(x: CoincidenceSpectrum):
     vals = [
         "detpair", "ecal", "eres", "peak_counts", "dpeak_counts",
@@ -193,6 +236,7 @@ def c_to_json(x: CoincidenceSpectrum):
     return {"__name__": "CoincidenceSpectrum"} | {
         val: scalarize(getattr(x, val)) for val in vals
     }
+
 
 def to_json(
     x: MultiCampaign
@@ -211,14 +255,36 @@ def to_json(
         return s_to_json(x)
     return c_to_json(x)
 
+
 @app.get("/getMetadata/{idcs}")
 def get_metadata(idcs: str):
-    keys = idcs.split("-")
-
-    types = [int, int, int, str]
+    parsed_idcs = parse_single_selection(idcs)
 
     x = data
-    for i, type in zip(keys, types):
-        x = x[type(i)]
+    for i in parsed_idcs:
+        x = x[i]
 
     return JSONResponse(to_json(x))
+
+
+@dataclass
+class SingleAnalyzeArgs:
+    s_width: float
+    w_width: float
+    w_dist: float
+    w_rightonly: bool
+    peak_width: float
+    bg_frac: float
+    bg_corr: bool
+    v2p_bounds: tuple[float, float, float, float]
+    follow_peak_order: int
+
+
+@app.get("/single_analyze")
+def single_analyze(selection: Selection, args: SingleAnalyzeArgs):
+    parsed_idcs = parse_selection(selection)
+
+    for idcs in parsed_idcs["S"]:
+        s = data[idcs[0]][idcs[1]][idcs[2]][idcs[3]]
+
+        s.analyze(**asdict(args))

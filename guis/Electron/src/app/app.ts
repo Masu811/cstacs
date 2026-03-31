@@ -1,5 +1,6 @@
 import { Component, computed, signal, WritableSignal } from '@angular/core';
 import { TopBar } from './workspace/topbar/topbar';
+import { Dialog } from './workspace/dialogs/dialog';
 import { Toolbar } from './workspace/toolbar/toolbar';
 import { Editor } from './workspace/editor/editor';
 import { BottomBar } from './workspace/bottombar/bottombar';
@@ -9,7 +10,7 @@ import { MultiCampaign, DtypeToggle, Dtype, DtypeCounter, Metadata, DtypeSelecti
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.css',
-  imports: [TopBar, Toolbar, Editor, BottomBar],
+  imports: [TopBar, Dialog, Toolbar, Editor, BottomBar],
 })
 export class App {
   protected readonly title = signal('stacs');
@@ -66,4 +67,7 @@ export class App {
   deselect = signal(false);
 
   metadata: WritableSignal<Metadata | null> = signal(null);
+
+  dialogType = signal("none");
+  dialogOpen = signal(false);
 }

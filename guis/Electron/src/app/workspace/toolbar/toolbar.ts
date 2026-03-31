@@ -1,6 +1,6 @@
 import { Component, model, input, computed } from "@angular/core";
 import { Router } from "@angular/router";
-import { Dtype, MultiCampaign, DtypeToggle, Metadata, DtypeSelection } from "../../types";
+import { Dtype, MultiCampaign, DtypeToggle, Metadata, DtypeSelection, ParsedSelection } from "../../types";
 import { MetadataService } from "../../services/metadata";
 
 @Component({
@@ -22,6 +22,9 @@ export class Toolbar {
     return Object.values(this.selection()).some(val => val);
   });
 
+  dialogType = model.required<string>();
+  dialogOpen = model.required<boolean>();
+
   constructor(private router: Router, private metadata: MetadataService) { }
 
   async importData() {
@@ -39,12 +42,7 @@ export class Toolbar {
   }
 
   async deleteData() {
-    const payload = Object.fromEntries(
-      Object.entries(this.selection()).map(([key, value]) => [
-        key,
-        Array.from(value)
-      ])
-    );
+    const payload = this.parseSelection();
 
     const response = await fetch("http://127.0.0.1:8000/delete_data", {
       method: "POST",
@@ -67,9 +65,22 @@ export class Toolbar {
     this.data.set(newData);
   }
 
+  parseSelection(): ParsedSelection {
+    const selection = this.selection();
+    let parsed_selection = {} as ParsedSelection;
+
+    for (const [key, value] of Object.entries(selection)) {
+      parsed_selection = {
+        ...parsed_selection,
+        [key]: Array.from(value).map(x => x.replaceAll(",", "-")),
+      };
+    }
+
+    return parsed_selection;
+  }
+
   async fetchMetadata(kind: Dtype) {
-    const id = Array.from(this.selection()[kind])[0];
-    const idcs = id.replaceAll(",", "-");
+    const idcs = this.parseSelection()[kind][0];
 
     const response = await fetch(`http://127.0.0.1:8000/getMetadata/${idcs}`);
     if (!response.ok) {
@@ -80,5 +91,10 @@ export class Toolbar {
 
     this.metadata.metadata.set(data);
     this.router.navigate(["/metadata"]);
+  }
+
+  analyzeSingles() {
+    this.dialogType.set("SingleAnalyze");
+    this.dialogOpen.set(true);
   }
 }

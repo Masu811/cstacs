@@ -1,6 +1,9 @@
 <main>
   <topbar></topbar>
-  <toolbar [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [(selection)]="selection" [(deselect)]="deselect"></toolbar>
+  @if (dialogOpen()) {
+    <custom-dialog [dialogType]="dialogType()" [(dialogOpen)]="dialogOpen"></custom-dialog>
+  }
+  <toolbar [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [(selection)]="selection" [(deselect)]="deselect" [(dialogType)]="dialogType" [(dialogOpen)]="dialogOpen"></toolbar>
   <editor id="editor" [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [(selection)]="selection" [deselect]="deselect()"></editor>
   <bottombar [availDtypes]="availDtypes()" [selection]="selection()"></bottombar>
 </main>

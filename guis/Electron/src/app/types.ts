@@ -49,6 +49,14 @@ export type DtypeSelection = {
   [Dtype.C]: Set<string>,
 }
 
+export type ParsedSelection = {
+  [Dtype.MULT]: Array<string>,
+  [Dtype.MC]: Array<string>,
+  [Dtype.M]: Array<string>,
+  [Dtype.S]: Array<string>,
+  [Dtype.C]: Array<string>,
+}
+
 export type Metadata = {
   __name__: string,
 }
