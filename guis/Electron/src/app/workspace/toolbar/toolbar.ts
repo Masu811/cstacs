@@ -1,6 +1,6 @@
 import { Component, model, input, computed } from "@angular/core";
 import { Router } from "@angular/router";
-import { Dtype, MultiCampaign, DtypeToggle, Metadata, DtypeSelection, ParsedSelection } from "../../types";
+import { Dtype, MultiCampaign, DtypeToggle, DtypeSelection, ParsedSelection, parseSelection } from "../../types";
 import { MetadataService } from "../../services/metadata";
 
 @Component({
@@ -42,7 +42,7 @@ export class Toolbar {
   }
 
   async deleteData() {
-    const payload = this.parseSelection();
+    const payload = parseSelection(this.selection());
 
     const response = await fetch("http://127.0.0.1:8000/delete_data", {
       method: "POST",
@@ -65,22 +65,8 @@ export class Toolbar {
     this.data.set(newData);
   }
 
-  parseSelection(): ParsedSelection {
-    const selection = this.selection();
-    let parsed_selection = {} as ParsedSelection;
-
-    for (const [key, value] of Object.entries(selection)) {
-      parsed_selection = {
-        ...parsed_selection,
-        [key]: Array.from(value).map(x => x.replaceAll(",", "-")),
-      };
-    }
-
-    return parsed_selection;
-  }
-
   async fetchMetadata(kind: Dtype) {
-    const idcs = this.parseSelection()[kind][0];
+    const idcs = parseSelection(this.selection())[kind][0];
 
     const response = await fetch(`http://127.0.0.1:8000/getMetadata/${idcs}`);
     if (!response.ok) {

@@ -276,15 +276,25 @@ class SingleAnalyzeArgs:
     peak_width: float
     bg_frac: float
     bg_corr: bool
-    v2p_bounds: tuple[float, float, float, float]
+    v2p_bounds: list[float]
     follow_peak_order: int
 
 
-@app.get("/single_analyze")
+@app.post("/single_analyze")
 def single_analyze(selection: Selection, args: SingleAnalyzeArgs):
     parsed_idcs = parse_selection(selection)
 
     for idcs in parsed_idcs["S"]:
         s = data[idcs[0]][idcs[1]][idcs[2]][idcs[3]]
 
-        s.analyze(**asdict(args))
+        kwargs = asdict(args)
+
+        order = kwargs.pop("follow_peak_order")
+
+        kwargs["follow_peak"] = (
+            "0th_order_correction" if order == 0 else
+            "1st_order_correction" if order == 1 else
+            ""
+        )
+
+        s.analyze(**kwargs)

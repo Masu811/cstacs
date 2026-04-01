@@ -10,4 +10,35 @@
 dialog {
   top: 50%;
   transform: translateY(-50%);
+  background-color: var(--editor-color);
+  color: lightgray;
+  font-family: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+  font-size: 0.95em;
+  border-radius: 3px;
+  padding: 0;
+  overflow: hidden;
+}
+
+h1, h2, h3 {
+  margin: 10px;
+}
+
+.frame {
+  margin: 0;
+  padding: 10px;
+  background-color: var(--menu-color);
+}
+
+div {
+  margin: 10px;
+}
+
+input, select, button {
+  background-color: var(--highlighted-editor-color);
+  color: lightgray;
+  margin: 0 1em;
+}
+
+input[type="number"] {
+  width: 5em;
 }

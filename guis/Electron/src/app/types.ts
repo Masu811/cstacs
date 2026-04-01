@@ -57,6 +57,20 @@ export type ParsedSelection = {
   [Dtype.C]: Array<string>,
 }
 
+export function parseSelection(selection: DtypeSelection): ParsedSelection {
+  let parsed_selection = {} as ParsedSelection;
+
+  for (const [key, value] of Object.entries(selection)) {
+    parsed_selection = {
+      ...parsed_selection,
+      [key]: Array.from(value).map(x => x.replaceAll(",", "-")),
+    };
+  }
+
+  return parsed_selection;
+}
+
+
 export type Metadata = {
   __name__: string,
 }
