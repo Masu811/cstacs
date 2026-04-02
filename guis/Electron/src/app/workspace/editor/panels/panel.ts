@@ -1,3 +1,1 @@
-export class Panel {
-
-}
+export class Panel { }

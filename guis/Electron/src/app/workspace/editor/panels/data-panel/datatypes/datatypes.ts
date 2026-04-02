@@ -1,5 +1,6 @@
-import { Component, input, model, output } from "@angular/core";
-import { Dtype, DtypeCounter, DtypeToggle } from "../../../../../types";
+import { Component, input, output } from "@angular/core";
+import { Dtype, DtypeCounter } from "../../../../../types";
+import { AppData } from "../../../../../services/app_data";
 
 @Component({
   selector: "datatypes",
@@ -7,10 +8,10 @@ import { Dtype, DtypeCounter, DtypeToggle } from "../../../../../types";
   styleUrl: "datatypes.css",
 })
 export class Datatypes {
-  dtypes = Dtype;
-  availDtypes = input.required<DtypeToggle>();
   openCounter = input.required<DtypeCounter>();
   dtypeToggle = output<Dtype>();
+
+  constructor(public appData: AppData) { }
 
   toggleDtypeDisplay(type: Dtype) {
     this.dtypeToggle.emit(type);

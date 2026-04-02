@@ -1,9 +1,9 @@
 <main>
   <topbar></topbar>
-  @if (dialogOpen()) {
-    <custom-dialog [dialogType]="dialogType()" [(dialogOpen)]="dialogOpen" [selection]="selection()"></custom-dialog>
+  @if (appData.dialogOpen()) {
+    <custom-dialog></custom-dialog>
   }
-  <toolbar [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [(selection)]="selection" [(deselect)]="deselect" [(dialogType)]="dialogType" [(dialogOpen)]="dialogOpen"></toolbar>
-  <editor id="editor" [(data)]="data" [(projectLoaded)]="projectLoaded" [availDtypes]="availDtypes()" [(selection)]="selection" [deselect]="deselect()"></editor>
-  <bottombar [availDtypes]="availDtypes()" [selection]="selection()"></bottombar>
+  <toolbar></toolbar>
+  <editor id="editor"></editor>
+  <bottombar></bottombar>
 </main>

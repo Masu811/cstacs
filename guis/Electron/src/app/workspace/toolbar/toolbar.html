@@ -3,14 +3,14 @@
     <tbody>
       <tr>
         <td (click)="importData()">Import</td>
-        @if (projectLoaded()) {
+        @if (appData.projectLoaded()) {
           <td>Create</td>
         }
       </tr>
-      @if (projectLoaded()) {
+      @if (appData.projectLoaded()) {
         <tr>
           <td>Select</td>
-          @if (anySelected()) {
+          @if (appData.anySelected()) {
             <td (click)="deleteData()">Delete</td>
           }
         </tr>
@@ -19,8 +19,8 @@
   </table>
   <span>General</span>
 </div>
-@if (availDtypes()[dtypes.M]) {
-  @if (selection()[dtypes.MC].size > 0) {
+@if (appData.availDtypes()[appData.dtypes.M]) {
+  @if (appData.selection()[appData.dtypes.MC].size > 0) {
     <div>
       <table>
         <tbody>
@@ -40,7 +40,7 @@
             <td>Cluster</td>
             <td>Sum</td>
             <td>Plot Metadata</td>
-            @if (selection()[dtypes.C].size > 1) {
+            @if (appData.selection()[appData.dtypes.C].size > 1) {
               <td>Ratio Plotter</td>
             }
           </tr>
@@ -49,19 +49,19 @@
       <span>Campaigns</span>
     </div>
   }
-  @if (selection()[dtypes.M].size == 1) {
+  @if (appData.selection()[appData.dtypes.M].size == 1) {
     <div>
       <table>
         <tbody>
           <tr>
-            <td (click)="fetchMetadata(dtypes.M)">Show Metadata</td>
+            <td (click)="fetchMetadata(appData.dtypes.M)">Show Metadata</td>
           </tr>
         </tbody>
       </table>
       <span>DopplerMeasurements</span>
     </div>
   }
-  @if (selection()[dtypes.S].size > 0) {
+  @if (appData.selection()[appData.dtypes.S].size > 0) {
     <div>
       <table>
         <tbody>
@@ -71,8 +71,8 @@
           </tr>
           <tr>
             <td>Calibrate</td>
-            @if (selection()[dtypes.S].size == 1) {
-              <td (click)="fetchMetadata(dtypes.S)">Show Metadata</td>
+            @if (appData.selection()[appData.dtypes.S].size == 1) {
+              <td (click)="fetchMetadata(appData.dtypes.S)">Show Metadata</td>
             }
           </tr>
         </tbody>
@@ -80,14 +80,14 @@
       <span>SingleSpectra</span>
     </div>
   }
-  @if (selection()[dtypes.C].size > 0) {
+  @if (appData.selection()[appData.dtypes.C].size > 0) {
     <div>
       <table>
         <tbody>
           <tr>
             <td>Analyze</td>
-            @if (selection()[dtypes.C].size == 1) {
-              <td (click)="fetchMetadata(dtypes.C)">Show Metadata</td>
+            @if (appData.selection()[appData.dtypes.C].size == 1) {
+              <td (click)="fetchMetadata(appData.dtypes.C)">Show Metadata</td>
             }
           </tr>
           <tr>

@@ -1,50 +1,40 @@
 <div id="container">
-  @for (mult of data(); track $index; let i = $index) {
+  @for (mult of appData.data(); track $index; let i = $index) {
     <dropdown
       [id]="[i].toString()"
       [name]="mult.name ?? 'unnamed'"
-      [kind]="dtypes.MULT"
+      [kind]="appData.dtypes.MULT"
       [(openCounter)]="openCounter"
       [globalToggle]="multToggle()"
-      [(selection)]="selection"
-      [deselect]="deselect()"
       icon="mult.svg">
       @for (mc of mult.campaigns; track $index; let j = $index) {
         <dropdown
           [id]="[i, j].toString()"
           [name]="mc.name ?? 'unnamed'"
-          [kind]="dtypes.MC"
+          [kind]="appData.dtypes.MC"
           [(openCounter)]="openCounter"
           [globalToggle]="mcToggle()"
-          [(selection)]="selection"
-          [deselect]="deselect()"
           icon="mc.svg">
           @for (m of mc.measurements; track $index; let k = $index) {
             <dropdown
               [id]="[i, j, k].toString()"
               [name]="m.name ?? 'unnamed'"
-              [kind]="dtypes.M"
+              [kind]="appData.dtypes.M"
               [(openCounter)]="openCounter"
               [globalToggle]="mToggle()"
-              [(selection)]="selection"
-              [deselect]="deselect()"
               icon="m.svg">
               @for (s of m.singles; track $index) {
                 <leaf
                   [id]="[i, j, k, s].toString()"
                   [name]="s"
-                  [kind]="dtypes.S"
-                  [(selection)]="selection"
-                  [deselect]="deselect()"
+                  [kind]="appData.dtypes.S"
                   icon="S"></leaf>
               }
               @for (c of m.coinc; track $index) {
                 <leaf
                   [id]="[i, j, k, c].toString()"
                   [name]="c"
-                  [kind]="dtypes.C"
-                  [(selection)]="selection"
-                  [deselect]="deselect()"
+                  [kind]="appData.dtypes.C"
                   icon="C"></leaf>
               }
             </dropdown>
@@ -54,4 +44,4 @@
     </dropdown>
   }
 </div>
-<datatypes [availDtypes]="availDtypes()" [openCounter]="openCounter()" (dtypeToggle)="handleDtypeToggle($event)"></datatypes>
+<datatypes [openCounter]="openCounter()" (dtypeToggle)="handleDtypeToggle($event)"></datatypes>

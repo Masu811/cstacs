@@ -1,7 +1,6 @@
-import { Component, input, computed} from "@angular/core";
+import { Component } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { Panel } from "../panel";
-import { Metadata } from "../../../../types";
 
 @Component({
   selector: "display-panel",

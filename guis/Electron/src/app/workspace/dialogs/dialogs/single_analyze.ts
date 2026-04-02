@@ -1,6 +1,7 @@
-import { Component, input, ModelSignal, signal } from "@angular/core";
+import { Component, signal } from "@angular/core";
 import { form, FormField, max, min } from "@angular/forms/signals";
-import { DtypeSelection, parseSelection } from "../../../types";
+import { parseSelection } from "../../../types";
+import { AppData } from "../../../services/app_data";
 
 interface SingleAnalyzeArgs {
   s_width: number;
@@ -23,9 +24,6 @@ interface SingleAnalyzeArgs {
   imports: [FormField],
 })
 export class SingleAnalyzeDialog {
-  dialogOpen = input.required<ModelSignal<boolean>>();
-  selection = input.required<DtypeSelection>();
-
   formModel = signal<SingleAnalyzeArgs>({
     s_width: 1.1,
     w_width: 1.0,
@@ -54,15 +52,17 @@ export class SingleAnalyzeDialog {
     min(schemaPath.v2p_peak_upper, 0);
   });
 
+  constructor(public appData: AppData) { }
+
   close() {
-    this.dialogOpen().set(false);
+    this.appData.dialogOpen.set(false);
   }
 
   async submit(event: Event) {
     event.preventDefault();
 
     const payload = {
-      selection: parseSelection(this.selection()),
+      selection: parseSelection(this.appData.selection()),
       args: {
         s_width: this.args.s_width().value(),
         w_width: this.args.w_width().value(),

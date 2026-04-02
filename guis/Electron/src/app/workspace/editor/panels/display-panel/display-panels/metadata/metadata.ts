@@ -1,6 +1,6 @@
 import { Component, computed } from "@angular/core";
 import { Metadata } from "../../../../../../types";
-import { MetadataService } from "../../../../../../services/metadata";
+import { AppData } from "../../../../../../services/app_data";
 
 @Component({
   selector: "metadata",
@@ -8,10 +8,10 @@ import { MetadataService } from "../../../../../../services/metadata";
   styleUrl: "metadata.css",
 })
 export class MetadataPanel {
-  name = computed(() => this.metadata.metadata()?.__name__);
+  name = computed(() => this.appData.metadata()?.__name__);
 
   elements = computed(() => {
-    const metadata: Metadata | null = this.metadata.metadata();
+    const metadata: Metadata | null = this.appData.metadata();
 
     if (!metadata) {
       return [];
@@ -22,5 +22,5 @@ export class MetadataPanel {
       .map(item => `${item[0]}: ${item[1]}`);
   });
 
-  constructor(private metadata: MetadataService) { }
+  constructor(public appData: AppData) { }
 }

@@ -1,5 +1,6 @@
 import { Component, input, signal, model, effect, SkipSelf, Optional } from "@angular/core";
-import { Dtype, DtypeCounter, DtypeSelection } from "../../../../../types";
+import { Dtype, DtypeCounter } from "../../../../../types";
+import { AppData } from "../../../../../services/app_data";
 
 @Component({
   selector: "dropdown",
@@ -11,9 +12,6 @@ export class Dropdown {
   icon = input("");
   kind = input.required<Dtype>();
   id = input.required<string>();
-
-  selection = model.required<DtypeSelection>();
-  deselect = input.required<boolean>();
 
   openCounter = model.required<DtypeCounter>();
   open = signal(false);
@@ -59,7 +57,7 @@ export class Dropdown {
     const id = this.id();
     const kind = this.kind();
 
-    this.selection.update(old => {
+    this.appData.selection.update(old => {
       const set = new Set(old[kind]);
 
       if (isSelected) set.add(id);
@@ -72,13 +70,16 @@ export class Dropdown {
     });
   });
   deselectEffect = effect(() => {
-    this.deselect();
+    this.appData.deselect();
     this.selected.set(false);
   })
   manuallySelected = false;
   selected = signal(false);
 
-  constructor(@Optional() @SkipSelf() private parent: Dropdown) { }
+  constructor(
+    @Optional() @SkipSelf() private parent: Dropdown,
+    public appData: AppData
+  ) { }
 
   toggleOpen() {
     this.localToggle.update(val => !val);

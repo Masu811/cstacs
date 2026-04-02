@@ -1,22 +1,22 @@
 <ul>
-  @if (availDtypes()[dtypes.MULT]) {
+  @if (appData.availDtypes()[appData.dtypes.MULT]) {
     <li
-      [class.active]="openCounter()[dtypes.MULT] > 0"
-      (click)="toggleDtypeDisplay(dtypes.MULT)">
+      [class.active]="openCounter()[appData.dtypes.MULT] > 0"
+      (click)="toggleDtypeDisplay(appData.dtypes.MULT)">
       Mult
     </li>
   }
-  @if (availDtypes()[dtypes.MC]) {
+  @if (appData.availDtypes()[appData.dtypes.MC]) {
     <li
-      [class.active]="openCounter()[dtypes.MC] > 0"
-      (click)="toggleDtypeDisplay(dtypes.MC)">
+      [class.active]="openCounter()[appData.dtypes.MC] > 0"
+      (click)="toggleDtypeDisplay(appData.dtypes.MC)">
       MC
     </li>
   }
-  @if (availDtypes()[dtypes.M]) {
+  @if (appData.availDtypes()[appData.dtypes.M]) {
     <li
-      [class.active]="openCounter()[dtypes.M] > 0"
-      (click)="toggleDtypeDisplay(dtypes.M)">
+      [class.active]="openCounter()[appData.dtypes.M] > 0"
+      (click)="toggleDtypeDisplay(appData.dtypes.M)">
       M
     </li>
   }

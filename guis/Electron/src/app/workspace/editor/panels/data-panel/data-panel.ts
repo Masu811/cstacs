@@ -1,9 +1,10 @@
-import { Component, model, input, signal, computed } from "@angular/core";
+import { Component, signal, computed } from "@angular/core";
 import { Panel } from "../panel";
 import { Dropdown } from "./dropdown/dropdown";
-import { MultiCampaign, Dtype, DtypeCounter, DtypeToggle, DtypeSelection } from "../../../../types";
+import { Dtype, DtypeCounter } from "../../../../types";
 import { Datatypes } from "./datatypes/datatypes";
 import { Leaf } from "./leaf/leaf";
+import { AppData } from "../../../../services/app_data";
 
 @Component({
   selector: "data-panel",
@@ -12,14 +13,6 @@ import { Leaf } from "./leaf/leaf";
   imports: [Dropdown, Datatypes, Leaf],
 })
 export class DataPanel extends Panel {
-  data = model(Array<MultiCampaign>());
-
-  dtypes = Dtype;
-  availDtypes = input.required<DtypeToggle>();
-
-  selection = model.required<DtypeSelection>();
-  deselect = input.required<boolean>();
-
   openCounter = signal({
     [Dtype.MULT]: 0,
     [Dtype.MC]: 0,
@@ -31,6 +24,8 @@ export class DataPanel extends Panel {
   multToggle = signal([false]);
   mcToggle = signal([false]);
   mToggle = signal([false]);
+
+  constructor(public appData: AppData) { super(); }
 
   handleDtypeToggle(type: Dtype) {
     switch (type) {

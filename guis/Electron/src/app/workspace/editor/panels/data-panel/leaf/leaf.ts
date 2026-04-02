@@ -1,6 +1,7 @@
 import { Component, input, signal, effect, SkipSelf, model } from "@angular/core";
-import { Dtype, DtypeCounter, DtypeSelection } from "../../../../../types";
+import { Dtype } from "../../../../../types";
 import { Dropdown } from "../dropdown/dropdown";
+import { AppData } from "../../../../../services/app_data";
 
 @Component({
   selector: "leaf",
@@ -13,9 +14,6 @@ export class Leaf {
   kind = model.required<Dtype>();
   dtypes = Dtype;
   id = input.required<string>();
-
-  selection = model.required<DtypeSelection>();
-  deselect = input.required<boolean>();
 
   parentSelectEffect = effect(() => {
     if (this.parent.selected()) {
@@ -36,7 +34,7 @@ export class Leaf {
     const id = this.id();
     const kind = this.kind();
 
-    this.selection.update(old => {
+    this.appData.selection.update(old => {
       const set = new Set(old[kind]);
 
       if (isSelected) set.add(id);
@@ -49,13 +47,16 @@ export class Leaf {
     });
   });
   deselectEffect = effect(() => {
-    this.deselect();
+    this.appData.deselect();
     this.selected.set(false);
   })
   manuallySelected = false;
   selected = signal(false);
 
-  constructor(@SkipSelf() private parent: Dropdown) { }
+  constructor(
+    @SkipSelf() private parent: Dropdown,
+    public appData: AppData,
+  ) { }
 
   toggleSelect() {
     this.manuallySelected = true;
