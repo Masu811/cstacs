@@ -1,4 +1,6 @@
-import { Component } from "@angular/core";
+import { Component, effect, ElementRef, signal, ViewChild } from "@angular/core";
+import { AppData } from "../../../../../../services/app_data";
+import { PlotTrace } from "../../../../../../types";
 
 @Component({
   selector: "plots",
@@ -6,33 +8,65 @@ import { Component } from "@angular/core";
   styleUrl: "plots.css",
 })
 export class PlotPanel {
-    async plot() {
-      const Plotly = await this.getPlotly();
+  constructor(public appData: AppData) { }
 
-      var trace1 = {
-        x: [1, 2, 3, 4],
-        y: [10, 15, 13, 17],
-        type: 'scatter'
-      };
+  private plotly: any | null = null;
+  @ViewChild('canvas') canvas!: ElementRef;
 
-      var trace2 = {
-        x: [1, 2, 3, 4],
-        y: [16, 5, 11, 9],
-        type: 'scatter'
-      };
+  plotEffect = effect(() => {
+    this.plot(this.appData.plotData());
+  });
 
-      var data = [trace1, trace2];
+  async plot(data: Array<PlotTrace>) {
+    if (this.plotly == null) {
+      await this.getPlotly();
+    }
+    if (this.plotly == null) return;
 
-      //@ts-ignore
-      Plotly.newPlot('canvas', data);
+    const canvas = this.canvas.nativeElement;
+
+    const layout = {
+      autosize: true,
+    };
+
+    const config = {
+      responsive: true,
+      displayModeBar: true,
+      modeBarButtonsToAdd: [
+        {
+          name: 'Toggle log Y',
+          icon: this.plotly.Icons.autoscale,
+          click: (gd: any) => {
+            const currentType = gd.layout?.yaxis?.type ?? 'linear';
+
+            const newType = currentType === 'log' ? 'linear' : 'log';
+
+            this.plotly.relayout(gd, {
+              'yaxis.type': newType
+            });
+          }
+        }
+      ]
+    };
+
+    if (!(canvas as any)._fullLayout) {
+      await this.plotly.newPlot(canvas, data, layout, config);
+    } else {
+      await this.plotly.react(canvas, data, layout, config);
+    }
+  }
+
+  async getPlotly() {
+    if (typeof window === "undefined") {
+      console.error("Failed to load Plotly module");
+      return null;
     }
 
-    async getPlotly() {
-      if (typeof window === "undefined") {
-        return null;
-      }
-
+    if (!this.plotly) {
       const module = await import("plotly.js-dist-min");
-      return module.default;
+      this.plotly = module.default;
     }
+
+    return this.plotly;
+  }
 }

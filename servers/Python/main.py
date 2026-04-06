@@ -298,3 +298,55 @@ def single_analyze(selection: Selection, args: SingleAnalyzeArgs):
         )
 
         s.analyze(**kwargs)
+
+
+@app.get("/showSingleSpectrum/{idcs}")
+def show_SingleSpectrum(idcs: str):
+    parsed_idcs = parse_single_selection(idcs)
+
+    x = data
+    for i in parsed_idcs:
+        x = x[i]
+
+    return JSONResponse([{
+        "x": x.energies.tolist(),
+        "y": x.spectrum.tolist(),
+        "name": x.detname,
+        "type": "scatter",
+    }])
+
+
+@app.get("/showCoincidenceSpectrum/{idcs}")
+def show_CoincidenceSpectrum(idcs: str):
+    parsed_idcs = parse_single_selection(idcs)
+
+    x = data
+    for i in parsed_idcs:
+        x = x[i]
+
+    return JSONResponse([{
+        "x": (x.ecal[0][0] + x.ecal[0][1] * np.arange(x.window[0][0], x.window[0][1])).tolist(),
+        "y": (x.ecal[1][0] + x.ecal[1][1] * np.arange(x.window[1][0], x.window[1][1])).tolist(),
+        "z": x.hist.tolist(),
+        "name": x.detpair,
+        "type": "heatmap",
+    }])
+
+
+@app.get("/showSingles/{idcs}")
+def show_singles(idcs: str):
+    parsed_idcs = parse_single_selection(idcs)
+
+    x = data
+    for i in parsed_idcs:
+        x = x[i]
+
+    return JSONResponse([
+        {
+            "x": s.energies.tolist(),
+            "y": s.spectrum.tolist(),
+            "name": s.detname,
+            "type": "scatter",
+        }
+        for s in x.singles
+    ])

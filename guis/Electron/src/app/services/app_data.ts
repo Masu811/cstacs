@@ -1,9 +1,10 @@
 import { Injectable, signal, computed } from "@angular/core";
-import { MultiCampaign, Dtype, DtypeToggle, DtypeSelection, Metadata } from "../types";
+import { MultiCampaign, Dtype, DtypeToggle, DtypeSelection, PlotTrace, Metadata } from "../types";
 
 @Injectable({ providedIn: "root" })
 export class AppData {
   data = signal(Array<MultiCampaign>());
+  plotData = signal(Array<PlotTrace>());
   metadata = signal<Metadata | null>(null);
 
   projectLoaded = signal(false);

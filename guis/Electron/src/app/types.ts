@@ -70,6 +70,12 @@ export function parseSelection(selection: DtypeSelection): ParsedSelection {
   return parsed_selection;
 }
 
+export type PlotTrace = {
+  x: Array<number>,
+  y: Array<number>,
+  name: string,
+  type: string,
+}
 
 export type Metadata = {
   __name__: string,

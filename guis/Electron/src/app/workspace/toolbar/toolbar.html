@@ -56,6 +56,9 @@
           <tr>
             <td (click)="fetchMetadata(appData.dtypes.M)">Show Metadata</td>
           </tr>
+          <tr>
+            <td (click)="showSpectrum(appData.dtypes.M)">Show Singles</td>
+          </tr>
         </tbody>
       </table>
       <span>DopplerMeasurements</span>
@@ -68,6 +71,9 @@
           <tr>
             <td (click)="analyzeSingles()">Analyze</td>
             <td>Calculate Eres</td>
+            @if (appData.selection()[appData.dtypes.S].size == 1) {
+              <td (click)="showSpectrum(appData.dtypes.S)">Show Spectrum</td>
+            }
           </tr>
           <tr>
             <td>Calibrate</td>
@@ -92,6 +98,9 @@
           </tr>
           <tr>
             <td>Coinc S Param</td>
+            @if (appData.selection()[appData.dtypes.C].size == 1) {
+              <td (click)="showSpectrum(appData.dtypes.C)">Show Spectrum</td>
+            }
           </tr>
         </tbody>
       </table>

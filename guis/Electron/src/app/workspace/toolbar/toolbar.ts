@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { Router } from "@angular/router";
-import { Dtype, MultiCampaign, DtypeSelection, parseSelection } from "../../types";
+import { Dtype, MultiCampaign, DtypeSelection, parseSelection, PlotTrace } from "../../types";
 import { AppData } from "../../services/app_data";
 
 @Component({
@@ -66,5 +66,41 @@ export class Toolbar {
   analyzeSingles() {
     this.appData.dialogType.set("SingleAnalyze");
     this.appData.dialogOpen.set(true);
+  }
+
+  async showSpectrum(kind: Dtype) {
+    const idcs = parseSelection(this.appData.selection())[kind][0];
+
+    let endpoint;
+
+    switch (kind) {
+      case Dtype.S:
+        endpoint = "showSingleSpectrum";
+        break;
+      case Dtype.C:
+        endpoint = "showCoincidenceSpectrum";
+        break;
+      case Dtype.M:
+        endpoint = "showSingles";
+        break;
+      default:
+        console.error(`Unsupported Dtype ${kind} supplied to function showSpectrum`);
+        return;
+    }
+
+    const response = await fetch(`http://127.0.0.1:8000/${endpoint}/${idcs}`);
+    if (!response.ok) {
+      console.error(`Failed to fetch metadata for indices ${idcs}`);
+      return;
+    }
+    const data = await response.json();
+
+    if (kind == Dtype.C) {
+      //@ts-ignore
+      data.map((trace: PlotTrace) => trace.z = trace.z.map(row => row.map(i => Math.log(i))));
+    }
+
+    this.appData.plotData.set(data);
+    this.router.navigate(["/plots"]);
   }
 }

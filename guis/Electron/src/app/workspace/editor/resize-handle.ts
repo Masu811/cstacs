@@ -28,6 +28,7 @@ export class ResizeDirective implements AfterViewInit {
     this.grabbing = false;
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
+    window.dispatchEvent(new Event('resize'));
   }
 
   @HostListener('window:mousemove', ['$event'])
