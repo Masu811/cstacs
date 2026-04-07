@@ -350,3 +350,7 @@ def show_singles(idcs: str):
         }
         for s in x.singles
     ])
+
+@app.get("/print")
+def print_data():
+    return "Foo"

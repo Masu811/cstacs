@@ -64,7 +64,7 @@ export class Toolbar {
   }
 
   analyzeSingles() {
-    this.appData.dialogType.set("SingleAnalyze");
+    this.appData.dialogType.set("singleAnalyze");
     this.appData.dialogOpen.set(true);
   }
 
@@ -102,5 +102,10 @@ export class Toolbar {
 
     this.appData.plotData.set(data);
     this.router.navigate(["/plots"]);
+  }
+
+  print() {
+    this.appData.dialogType.set("print");
+    this.appData.dialogOpen.set(true);
   }
 }

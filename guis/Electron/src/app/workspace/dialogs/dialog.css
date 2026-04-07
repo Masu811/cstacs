@@ -42,3 +42,9 @@ input, select, button {
 input[type="number"] {
   width: 5em;
 }
+
+.add {
+  display: inline;
+  border: 1px solid gray;
+  border-radius: 0.4em;
+}

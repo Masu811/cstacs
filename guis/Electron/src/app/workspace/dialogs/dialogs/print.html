@@ -1,0 +1,30 @@
+<dialog [open]="appData.dialogOpen()">
+  <div class="frame">
+    <h1>MeasurementCampaign.print</h1>
+  </div>
+  <form [formGroup]="formModel" (submit)="submit($event)">
+    <h3>Parameters</h3>
+    <div formArrayName="items">
+      @for (item of items.controls; track $index; let i = $index) {
+        <div [formGroupName]="i">
+          <input type="text" formControlName="param"/>
+          <label>Target:</label>
+          <select formControlName="target">
+            <option>DopplerMeasurement</option>
+            <option>SingleSpectrum</option>
+            <option>CoincidenceSpectrum</option>
+          </select>
+          <label>Parser:</label>
+          <input type="text" formControlName="parser" readonly>
+        </div>
+      }
+    </div>
+    @if (items.controls.length < 20) {
+      <button type="button" (click)="addItem()">+</button>
+    }
+    <div class="frame">
+      <button type="submit">Compute</button>
+      <button type="button" (click)="close()">Cancel</button>
+    </div>
+  </form>
+</dialog>
