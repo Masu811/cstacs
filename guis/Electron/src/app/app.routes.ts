@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { PlotPanel } from './workspace/editor/panels/display-panel/display-panels/plots/plots';
 import { MetadataPanel } from './workspace/editor/panels/display-panel/display-panels/metadata/metadata';
 import { ConsolePanel } from './workspace/editor/panels/display-panel/display-panels/console/console';
+import { Table } from './workspace/editor/panels/display-panel/display-panels/table/table';
 
 export const routes: Routes = [
   {
@@ -19,5 +20,9 @@ export const routes: Routes = [
   {
     path: "console",
     component: ConsolePanel,
-  }
+  },
+  {
+    path: "table",
+    component: Table,
+  },
 ];

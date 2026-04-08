@@ -6,6 +6,7 @@ export class AppData {
   data = signal(Array<MultiCampaign>());
   plotData = signal(Array<PlotTrace>());
   metadata = signal<Metadata | null>(null);
+  tableData = signal<any>([]);
 
   projectLoaded = signal(false);
   dtypes = Dtype;

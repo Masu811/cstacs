@@ -2,6 +2,7 @@ import { Component, inject } from "@angular/core";
 import { ReactiveFormsModule, FormBuilder, FormArray } from "@angular/forms";
 import { parseSelection } from "../../../types";
 import { AppData } from "../../../services/app_data";
+import { Router } from "@angular/router";
 
 type Param = {
   param: string,
@@ -41,7 +42,7 @@ export class PrintDialog {
     this.items.push(this.createItem());
   }
 
-  constructor(public appData: AppData) { }
+  constructor(public appData: AppData, private router: Router) { }
 
   close() {
     this.appData.dialogOpen.set(false);
@@ -49,47 +50,38 @@ export class PrintDialog {
 
   openParserDialog() { }
 
-  submit(event: Event) {
+  async submit(event: Event) {
     event.preventDefault();
 
-    console.log(this.items.controls[0].value);
+    const items = this.items.controls.map(control => control.value);
+
+    const payload = {
+      selection: parseSelection(this.appData.selection()),
+      args: {
+        params: items.map(item => item.param),
+        targets: items.map(item => item.target),
+        parsers: items.map(item => item.parser),
+      }
+    };
+
+    const response = await fetch("http://127.0.0.1:8000/print", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      this.close();
+    } else {
+      console.error(response);
+      return;
+    }
+
+    const data = await response.json();
+
+    this.appData.tableData.set(data);
+    this.router.navigate(["/table"]);
   }
-
-  // async submit(event: Event) {
-  //   event.preventDefault();
-
-  //   const payload = {
-  //     selection: parseSelection(this.appData.selection()),
-  //     args: {
-  //       s_width: this.args.s_width().value(),
-  //       w_width: this.args.w_width().value(),
-  //       w_dist: this.args.w_dist().value(),
-  //       w_rightonly: this.args.w_rightonly().value(),
-  //       peak_width: this.args.peak_width().value(),
-  //       bg_frac: this.args.bg_frac().value(),
-  //       bg_corr: this.args.bg_corr().value(),
-  //       v2p_bounds: [
-  //         this.args.v2p_valley_lower().value(),
-  //         this.args.v2p_valley_upper().value(),
-  //         this.args.v2p_peak_lower().value(),
-  //         this.args.v2p_peak_upper().value(),
-  //       ],
-  //       follow_peak_order: this.args.follow_peak_order().value(),
-  //     }
-  //   };
-
-  //   const response = await fetch("http://127.0.0.1:8000/single_analyze", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json"
-  //     },
-  //     body: JSON.stringify(payload),
-  //   });
-
-  //   if (response.ok) {
-  //     this.close();
-  //   } else {
-  //     console.error(response);
-  //   }
-  // }
 }

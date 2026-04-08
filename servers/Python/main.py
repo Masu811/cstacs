@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import TypedDict
+from typing import Any, TypedDict
 from dataclasses import dataclass, asdict
 
 import numpy as np
@@ -351,6 +351,27 @@ def show_singles(idcs: str):
         for s in x.singles
     ])
 
-@app.get("/print")
-def print_data():
-    return "Foo"
+
+@dataclass
+class PrintArgs:
+    params: list[str]
+    targets: list[str]
+    parsers: list[str]
+
+
+@app.post("/print")
+def print_data(selection: Selection, args: PrintArgs):
+    kwargs = asdict(args)
+    kwargs.pop("parsers")
+    kwargs["targets"] = [
+        None if target == "" else
+        "doppler" if target.startswith("D")
+        else "single" if target.startswith("C")
+        else "coinc" for target in kwargs["targets"]
+    ]
+    return [
+        [
+            {key: list(map(str, value)) for key, value in mc_data.items()}
+            for mc_data in mult.get(**kwargs, use_pd=False)
+        ] for mult in data
+    ]

@@ -1,0 +1,29 @@
+:host {
+  overflow: auto;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td, th {
+  border: 1px solid var(--highlighted-editor-color);
+  padding: 0 10px;
+  text-align: center;
+}
+
+th {
+  position: sticky;
+  top: 1.8em;
+  background-color: var(--editor-color);
+}
+
+thead {
+  border-bottom: 2px solid var(--highlighted-editor-color);
+}
+
+h1, h2, h3 {
+  position: sticky;
+  top: 0;
+  background-color: var(--editor-color);
+}
