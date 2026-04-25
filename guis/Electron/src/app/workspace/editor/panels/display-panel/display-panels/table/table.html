@@ -5,16 +5,16 @@
       <thead>
         <tr>
           <th></th>  <!--Index column-->
-          @for (header of headers(mc); track $index) {
+          @for (header of headers(mc); track header) {
             <th>{{header}}</th>
           }
         </tr>
       </thead>
       <tbody>
-        @for (row of rows(mc); track $index; let i = $index) {
+        @for (row of rows(mc); track $index; let k = $index) {
           <tr>
-            <td>{{i}}</td>  <!--Index column-->
-            @for (cell of row; track $index) {
+            <td>{{k}}</td>  <!--Index column-->
+            @for (cell of row; track cell) {
               <td>{{cell ?? "NaN"}}</td>
             }
           </tr>

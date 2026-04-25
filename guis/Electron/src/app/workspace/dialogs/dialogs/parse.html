@@ -1,0 +1,24 @@
+<dialog [open]="appData.dialogOpen()">
+  <div class="frame">
+    <h1>MeasurementCampaign.parse</h1>
+  </div>
+  <form (submit)="submit($event)">
+    <div>
+      <label>Parameter:</label>
+      <input type="text" [formField]="args.param"/>
+      <label>Target:</label>
+      <select [formField]="args.target">
+        <option>auto</option>
+        <option>DopplerMeasurement</option>
+        <option>SingleSpectrum</option>
+        <option>CoincidenceSpectrum</option>
+      </select>
+      <label>Parser:</label>
+      <input type="text" [value]="formModel().parser.repr" (click)="openParserDialog()" readonly/>
+    </div>
+    <div class="frame">
+      <button type="submit">Compute</button>
+      <button type="button" (click)="close()">Cancel</button>
+    </div>
+  </form>
+</dialog>

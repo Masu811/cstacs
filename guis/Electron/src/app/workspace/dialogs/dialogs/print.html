@@ -10,12 +10,13 @@
           <input type="text" formControlName="param"/>
           <label>Target:</label>
           <select formControlName="target">
+            <option>auto</option>
             <option>DopplerMeasurement</option>
             <option>SingleSpectrum</option>
             <option>CoincidenceSpectrum</option>
           </select>
           <label>Parser:</label>
-          <input type="text" formControlName="parser" readonly>
+          <input type="text" [value]="item.value.parser.repr" (click)="openParserDialog(i)" readonly>
         </div>
       }
     </div>

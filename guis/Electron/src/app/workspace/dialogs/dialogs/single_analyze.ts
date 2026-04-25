@@ -1,7 +1,7 @@
 import { Component, signal } from "@angular/core";
 import { form, FormField, max, min } from "@angular/forms/signals";
 import { parseSelection } from "../../../types";
-import { AppData } from "../../../services/app_data";
+import { AppData } from "../../../app_data";
 
 interface SingleAnalyzeArgs {
   s_width: number;

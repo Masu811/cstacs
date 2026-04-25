@@ -4,7 +4,7 @@ import { Welcome } from "./panels/welcome-panel/welcome";
 import { DataPanel } from "./panels/data-panel/data-panel";
 import { DisplayPanel } from "./panels/display-panel/display-panel";
 import { ResizeDirective } from "./resize-handle";
-import { AppData } from "../../services/app_data";
+import { AppData } from "../../app_data";
 
 @Component({
   selector: "editor",

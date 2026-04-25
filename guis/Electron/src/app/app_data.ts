@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from "@angular/core";
-import { MultiCampaign, Dtype, DtypeToggle, DtypeSelection, PlotTrace, Metadata } from "../types";
+import { MultiCampaign, Dtype, DtypeToggle, DtypeSelection, PlotTrace, Metadata } from "./types";
+import { Parser } from "./workspace/dialogs/dialogs/parsers/parser-arg-types";
 
 @Injectable({ providedIn: "root" })
 export class AppData {
@@ -63,4 +64,11 @@ export class AppData {
 
   dialogType = signal("none");
   dialogOpen = signal(false);
+  parsersOpen = signal(false);
+  parserSelected = signal<Parser>({
+    name: "",
+    args: {},
+    repr: "",
+  });
+  parserIndex: number = 0;
 }

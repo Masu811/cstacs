@@ -1,5 +1,5 @@
 import { Component, effect, ElementRef, signal, ViewChild } from "@angular/core";
-import { AppData } from "../../../../../../services/app_data";
+import { AppData } from "../../../../../../app_data";
 import { PlotTrace } from "../../../../../../types";
 
 @Component({

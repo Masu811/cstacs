@@ -1,7 +1,7 @@
 import { Component, input, signal, effect, SkipSelf, model } from "@angular/core";
 import { Dtype } from "../../../../../types";
 import { Dropdown } from "../dropdown/dropdown";
-import { AppData } from "../../../../../services/app_data";
+import { AppData } from "../../../../../app_data";
 
 @Component({
   selector: "leaf",

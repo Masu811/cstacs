@@ -3,6 +3,9 @@
   @if (appData.dialogOpen()) {
     <custom-dialog></custom-dialog>
   }
+  @if (appData.parsersOpen()) {
+    <parser-dialog></parser-dialog>
+  }
   <toolbar></toolbar>
   <editor id="editor"></editor>
   <bottombar></bottombar>

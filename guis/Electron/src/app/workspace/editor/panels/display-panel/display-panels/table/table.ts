@@ -1,5 +1,5 @@
 import { Component, computed } from "@angular/core";
-import { AppData } from "../../../../../../services/app_data";
+import { AppData } from "../../../../../../app_data";
 
 @Component({
   selector: "data-table",

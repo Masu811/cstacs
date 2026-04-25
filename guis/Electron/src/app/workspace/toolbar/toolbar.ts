@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { Router } from "@angular/router";
 import { Dtype, MultiCampaign, DtypeSelection, parseSelection, PlotTrace } from "../../types";
-import { AppData } from "../../services/app_data";
+import { AppData } from "../../app_data";
 
 @Component({
   selector: "toolbar",
@@ -106,6 +106,11 @@ export class Toolbar {
 
   print() {
     this.appData.dialogType.set("print");
+    this.appData.dialogOpen.set(true);
+  }
+
+  parse() {
+    this.appData.dialogType.set("parse");
     this.appData.dialogOpen.set(true);
   }
 }

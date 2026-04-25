@@ -4,7 +4,7 @@ import { Dropdown } from "./dropdown/dropdown";
 import { Dtype, DtypeCounter } from "../../../../types";
 import { Datatypes } from "./datatypes/datatypes";
 import { Leaf } from "./leaf/leaf";
-import { AppData } from "../../../../services/app_data";
+import { AppData } from "../../../../app_data";
 
 @Component({
   selector: "data-panel",

@@ -1,17 +1,14 @@
-import { Component, inject } from "@angular/core";
-import { ReactiveFormsModule, FormBuilder, FormArray } from "@angular/forms";
+import { Component, effect, inject } from "@angular/core";
+import { ReactiveFormsModule, FormBuilder, FormArray, FormGroup } from "@angular/forms";
 import { parseSelection } from "../../../types";
-import { AppData } from "../../../services/app_data";
+import { AppData } from "../../../app_data";
 import { Router } from "@angular/router";
+import { Parser } from "./parsers/parser-arg-types";
 
 type Param = {
   param: string,
-  target: "DopplerMeasurement" | "SingleSpectrum" | "CoincidenceSpectrum",
-  parser: string,
-}
-
-interface PrintArgs {
-  params: Array<Param>,
+  target: "auto" | "DopplerMeasurement" | "SingleSpectrum" | "CoincidenceSpectrum",
+  parser: Parser,
 }
 
 @Component({
@@ -29,8 +26,12 @@ export class PrintDialog {
   createItem() {
     return this.FormBuilder.group({
       param: "",
-      target: "DopplerMeasurement",
-      parser: "",
+      target: "auto",
+      parser: {
+        name: "",
+        args: {},
+        repr: "",
+      },
     } as Param);
   }
 
@@ -48,7 +49,17 @@ export class PrintDialog {
     this.appData.dialogOpen.set(false);
   }
 
-  openParserDialog() { }
+  openParserDialog(i: number) {
+    this.appData.parserIndex = i;
+    this.appData.parsersOpen.set(true);
+  }
+
+  addParserEffect = effect(() => {
+    const i = this.appData.parserIndex;
+    const parser = this.appData.parserSelected();
+    const group = this.items.at(i) as FormGroup;
+    group.get("parser")?.setValue(parser);
+  });
 
   async submit(event: Event) {
     event.preventDefault();

@@ -10,6 +10,8 @@ from stacs.coinc import CoincidenceSpectrum
 from stacs.single import SingleSpectrum
 from stacs import MultiCampaign, MeasurementCampaign, DopplerMeasurement
 
+from parsers import Parser, parse_parser
+
 
 data: list[MultiCampaign] = []
 
@@ -352,26 +354,50 @@ def show_singles(idcs: str):
     ])
 
 
+def parse_targets_and_parsers(kwargs: dict[str, Any]) -> None:
+    if "targets" in kwargs:
+        kwargs["targets"] = [
+            None if target == "auto" else
+            "doppler" if target.startswith("D")
+            else "single" if target.startswith("S")
+            else "coinc" for target in kwargs["targets"]
+        ]
+
+    if "parsers" in kwargs:
+        kwargs["parsers"] = [
+            parse_parser(parser) for parser in kwargs["parsers"]
+        ]
+
+
 @dataclass
 class PrintArgs:
     params: list[str]
     targets: list[str]
-    parsers: list[str]
+    parsers: list[Parser]
 
 
 @app.post("/print")
 def print_data(selection: Selection, args: PrintArgs):
     kwargs = asdict(args)
-    kwargs.pop("parsers")
-    kwargs["targets"] = [
-        None if target == "" else
-        "doppler" if target.startswith("D")
-        else "single" if target.startswith("C")
-        else "coinc" for target in kwargs["targets"]
-    ]
+    parse_targets_and_parsers(kwargs)
     return [
         [
             {key: list(map(str, value)) for key, value in mc_data.items()}
             for mc_data in mult.get(**kwargs, use_pd=False)
         ] for mult in data
     ]
+
+
+@dataclass
+class ParseArgs:
+    params: list[str]
+    targets: list[str]
+    parsers: list[Parser]
+
+
+@app.post("/parse")
+def parse(selection: Selection, args: ParseArgs):
+    kwargs = asdict(args)
+    parse_targets_and_parsers(kwargs)
+    for mult in data:
+        mult.parse(**kwargs)

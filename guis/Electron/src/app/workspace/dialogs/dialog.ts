@@ -1,9 +1,10 @@
-import { Component, computed, signal, Type } from "@angular/core";
+import { Component, computed, Type } from "@angular/core";
 import { NgComponentOutlet } from "@angular/common";
 
+import { AppData } from "../../app_data";
 import { SingleAnalyzeDialog } from "./dialogs/single_analyze";
 import { PrintDialog } from "./dialogs/print";
-import { AppData } from "../../services/app_data";
+import { ParseDialog } from "./dialogs/parse";
 
 @Component({
   selector: "custom-dialog",
@@ -18,6 +19,8 @@ export class Dialog {
         return SingleAnalyzeDialog;
       case "print":
         return PrintDialog;
+      case "parse":
+        return ParseDialog;
       default:
         return null;
     }

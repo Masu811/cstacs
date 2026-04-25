@@ -1,6 +1,6 @@
 import { Component, input, signal, model, effect, SkipSelf, Optional } from "@angular/core";
 import { Dtype, DtypeCounter } from "../../../../../types";
-import { AppData } from "../../../../../services/app_data";
+import { AppData } from "../../../../../app_data";
 
 @Component({
   selector: "dropdown",

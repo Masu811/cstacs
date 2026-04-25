@@ -1,6 +1,6 @@
 import { Component, computed } from "@angular/core";
 import { Metadata } from "../../../../../../types";
-import { AppData } from "../../../../../../services/app_data";
+import { AppData } from "../../../../../../app_data";
 
 @Component({
   selector: "metadata",
