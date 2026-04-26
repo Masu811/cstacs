@@ -5,6 +5,7 @@ import { AppData } from "../../app_data";
 import { SingleAnalyzeDialog } from "./dialogs/single_analyze";
 import { PrintDialog } from "./dialogs/print";
 import { ParseDialog } from "./dialogs/parse";
+import { FilterDialog } from "./dialogs/filter";
 
 @Component({
   selector: "custom-dialog",
@@ -21,6 +22,8 @@ export class Dialog {
         return PrintDialog;
       case "parse":
         return ParseDialog;
+      case "filter":
+        return FilterDialog;
       default:
         return null;
     }

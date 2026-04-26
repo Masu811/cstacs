@@ -113,4 +113,9 @@ export class Toolbar {
     this.appData.dialogType.set("parse");
     this.appData.dialogOpen.set(true);
   }
+
+  filter() {
+    this.appData.dialogType.set("filter");
+    this.appData.dialogOpen.set(true);
+  }
 }

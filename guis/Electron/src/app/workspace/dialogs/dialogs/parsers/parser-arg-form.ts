@@ -19,7 +19,7 @@ export class ParserArgForm {
   }
 
   submit() {
-    this.appData.parserSelected.set(this.parserUI().toPayload());
+    this.appData.selectParser(this.parserUI().toPayload());
     this.close();
   }
 }

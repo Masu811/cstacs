@@ -65,10 +65,23 @@ export class AppData {
   dialogType = signal("none");
   dialogOpen = signal(false);
   parsersOpen = signal(false);
-  parserSelected = signal<Parser>({
-    name: "",
-    args: {},
-    repr: "",
-  });
-  parserIndex: number = 0;
+
+  private parserSelectionResolve: (value: Parser | null) => void = () => {};
+
+  openParserDialog(): Promise<Parser | null> {
+    return new Promise<Parser | null>(resolve => {
+      this.parserSelectionResolve = resolve;
+      this.parsersOpen.set(true);
+    });
+  }
+
+  selectParser(parser: Parser) {
+    this.parserSelectionResolve(parser);
+    this.parserSelectionResolve = () => {};
+  }
+
+  cancelParserDialog() {
+    this.parserSelectionResolve(null);
+    this.parserSelectionResolve = () => {};
+  }
 }

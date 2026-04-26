@@ -1,8 +1,7 @@
-import { Component, signal } from "@angular/core";
+import { Component, effect, signal } from "@angular/core";
 import { form, FormField, readonly } from "@angular/forms/signals";
 import { parseSelection } from "../../../types";
 import { AppData } from "../../../app_data";
-import { ParsersDialog } from "./parsers/parsers";
 import { Parser } from "./parsers/parser-arg-types";
 
 interface ParseArgs {
@@ -14,7 +13,7 @@ interface ParseArgs {
 @Component({
   templateUrl: "parse.html",
   styleUrl: "../dialog.css",
-  imports: [FormField, ParsersDialog],
+  imports: [FormField],
 })
 export class ParseDialog {
   formModel = signal<ParseArgs>({
@@ -37,11 +36,9 @@ export class ParseDialog {
     this.appData.dialogOpen.set(false);
   }
 
-  openParserDialog() {
-    this.appData.parsersOpen.set(true);
-  }
-
-  addParser(parser: Parser) {
+  async openParserDialog() {
+    const parser = await this.appData.openParserDialog();
+    if (parser === null) return;
     this.formModel.update(model => ({ ...model, parser: parser }));
   }
 

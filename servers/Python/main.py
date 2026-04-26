@@ -357,10 +357,10 @@ def show_singles(idcs: str):
 def parse_targets_and_parsers(kwargs: dict[str, Any]) -> None:
     if "targets" in kwargs:
         kwargs["targets"] = [
-            None if target == "auto" else
             "doppler" if target.startswith("D")
             else "single" if target.startswith("S")
-            else "coinc" for target in kwargs["targets"]
+            else "coinc" if target.startswith("C")
+            else None for target in kwargs["targets"]
         ]
 
     if "parsers" in kwargs:
@@ -401,3 +401,34 @@ def parse(selection: Selection, args: ParseArgs):
     parse_targets_and_parsers(kwargs)
     for mult in data:
         mult.parse(**kwargs)
+
+
+@dataclass
+class FilterArgs:
+    param: str
+    target: str
+    parser: Parser
+    byValue: bool
+    values: list[str]
+    min: float
+    max: float
+    negative: bool
+
+
+@app.post("/filter")
+def filter_data(selection: Selection, args: FilterArgs):
+    kwargs = {
+        "params": [args.param],
+        "targets": [args.target],
+        "parsers": [asdict(args.parser)],
+        "values": args.values if args.byValue else None,
+        "min": args.min,
+        "max": args.max,
+        "negative": args.negative,
+    }
+    parse_targets_and_parsers(kwargs)
+
+    for mult in data:
+        mult.filter(**kwargs)
+
+    return JSONResponse([tree(t) for t in data])

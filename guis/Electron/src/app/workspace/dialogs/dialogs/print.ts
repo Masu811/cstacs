@@ -49,17 +49,12 @@ export class PrintDialog {
     this.appData.dialogOpen.set(false);
   }
 
-  openParserDialog(i: number) {
-    this.appData.parserIndex = i;
-    this.appData.parsersOpen.set(true);
-  }
-
-  addParserEffect = effect(() => {
-    const i = this.appData.parserIndex;
-    const parser = this.appData.parserSelected();
+  async openParserDialog(i: number) {
+    const parser = await this.appData.openParserDialog();
+    if (parser === null) return;
     const group = this.items.at(i) as FormGroup;
-    group.get("parser")?.setValue(parser);
-  });
+    group.patchValue({ parser: parser });
+  }
 
   async submit(event: Event) {
     event.preventDefault();
