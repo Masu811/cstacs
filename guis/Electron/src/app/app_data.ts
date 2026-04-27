@@ -50,14 +50,21 @@ export class AppData {
     } as DtypeToggle;
   });
 
-  selection = signal({
-    [Dtype.MULT]: new Set<string>([]),
-    [Dtype.MC]: new Set<string>([]),
-    [Dtype.M]: new Set<string>([]),
-    [Dtype.S]: new Set<string>([]),
-    [Dtype.C]: new Set<string>([]),
-  } as DtypeSelection);
+  emptySelection() {
+    return {
+      [Dtype.MULT]: new Set<string>([]),
+      [Dtype.MC]: new Set<string>([]),
+      [Dtype.M]: new Set<string>([]),
+      [Dtype.S]: new Set<string>([]),
+      [Dtype.C]: new Set<string>([]),
+    } as DtypeSelection;
+  }
+
+  selection = signal(this.emptySelection());
   deselect = signal(false);
+  clearSelection() {
+    this.selection.set(this.emptySelection());
+  }
   anySelected = computed(() => {
     return Object.values(this.selection()).some(val => val);
   });

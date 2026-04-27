@@ -6,6 +6,8 @@ import { SingleAnalyzeDialog } from "./dialogs/single_analyze";
 import { PrintDialog } from "./dialogs/print";
 import { ParseDialog } from "./dialogs/parse";
 import { FilterDialog } from "./dialogs/filter";
+import { SortDialog } from "./dialogs/sort";
+import { SplitDialog } from "./dialogs/split";
 
 @Component({
   selector: "custom-dialog",
@@ -24,6 +26,10 @@ export class Dialog {
         return ParseDialog;
       case "filter":
         return FilterDialog;
+      case "sort":
+        return SortDialog;
+      case "split":
+        return SplitDialog;
       default:
         return null;
     }

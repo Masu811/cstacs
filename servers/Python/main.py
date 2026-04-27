@@ -370,14 +370,14 @@ def parse_targets_and_parsers(kwargs: dict[str, Any]) -> None:
 
 
 @dataclass
-class PrintArgs:
+class GenericArgs:
     params: list[str]
     targets: list[str]
     parsers: list[Parser]
 
 
 @app.post("/print")
-def print_data(selection: Selection, args: PrintArgs):
+def print_data(selection: Selection, args: GenericArgs):
     kwargs = asdict(args)
     parse_targets_and_parsers(kwargs)
     return [
@@ -388,15 +388,8 @@ def print_data(selection: Selection, args: PrintArgs):
     ]
 
 
-@dataclass
-class ParseArgs:
-    params: list[str]
-    targets: list[str]
-    parsers: list[Parser]
-
-
 @app.post("/parse")
-def parse(selection: Selection, args: ParseArgs):
+def parse(selection: Selection, args: GenericArgs):
     kwargs = asdict(args)
     parse_targets_and_parsers(kwargs)
     for mult in data:
@@ -430,5 +423,25 @@ def filter_data(selection: Selection, args: FilterArgs):
 
     for mult in data:
         mult.filter(**kwargs)
+
+    return JSONResponse([tree(t) for t in data])
+
+
+@app.post("/sort")
+def sort(selection: Selection, args: GenericArgs):
+    kwargs = asdict(args)
+    parse_targets_and_parsers(kwargs)
+    for mult in data:
+        mult.sort(**kwargs)
+
+    return JSONResponse([tree(t) for t in data])
+
+
+@app.post("/split")
+def split(selection: Selection, args: GenericArgs):
+    kwargs = asdict(args)
+    parse_targets_and_parsers(kwargs)
+    for mult in data:
+        mult.split(**kwargs)
 
     return JSONResponse([tree(t) for t in data])

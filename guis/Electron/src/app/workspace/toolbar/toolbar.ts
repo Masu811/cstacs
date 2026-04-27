@@ -39,13 +39,7 @@ export class Toolbar {
     const newData = await response.json() as Array<MultiCampaign>;
 
     this.appData.deselect.update(val => !val);
-    this.appData.selection.set({
-      [Dtype.MULT]: new Set<string>([]),
-      [Dtype.MC]: new Set<string>([]),
-      [Dtype.M]: new Set<string>([]),
-      [Dtype.S]: new Set<string>([]),
-      [Dtype.C]: new Set<string>([]),
-    } as DtypeSelection);
+    this.appData.clearSelection();
     this.appData.data.set(newData);
   }
 
@@ -116,6 +110,16 @@ export class Toolbar {
 
   filter() {
     this.appData.dialogType.set("filter");
+    this.appData.dialogOpen.set(true);
+  }
+
+  sort() {
+    this.appData.dialogType.set("sort");
+    this.appData.dialogOpen.set(true);
+  }
+
+  split() {
+    this.appData.dialogType.set("split");
     this.appData.dialogOpen.set(true);
   }
 }

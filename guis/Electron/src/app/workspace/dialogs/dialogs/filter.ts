@@ -1,20 +1,8 @@
-import { Component, effect, inject } from "@angular/core";
+import { Component, inject } from "@angular/core";
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Toggle } from "./toggle";
 import { AppData } from "../../../app_data";
 import { MultiCampaign, parseSelection } from "../../../types";
-import { Parser } from "./parsers/parser-arg-types";
-
-type Arg = {
-  param: string,
-  target: "auto" | "DopplerMeasurement" | "SingleSpectrum" | "CoincidenceSpectrum",
-  parser: Parser,
-  byValue: boolean,
-  values: string[],
-  min: number,
-  max: number,
-  negative: boolean,
-}
 
 @Component({
   templateUrl: "filter.html",
@@ -95,6 +83,8 @@ export class FilterDialog {
 
     const newData = await response.json() as Array<MultiCampaign>;
 
+    this.appData.deselect.update(val => !val);
+    this.appData.clearSelection();
     this.appData.data.set(newData);
   }
 }

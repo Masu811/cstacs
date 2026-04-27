@@ -4,19 +4,23 @@ import { Router } from "@angular/router";
 
 import { GenericCampaignDialog } from "./generic";
 import { AppData } from "../../../app_data";
+import { MultiCampaign } from "../../../types";
 
 @Component({
   templateUrl: "generic.html",
   styleUrl: "../dialog.css",
   imports: [ReactiveFormsModule]
 })
-export class ParseDialog extends GenericCampaignDialog {
-  override title = "MeasurementCampaign.parse";
-  override endpoint = "http://127.0.0.1:8000/parse";
+export class SortDialog extends GenericCampaignDialog {
+  override title = "MeasurementCampaign.sort";
+  override endpoint = "http://127.0.0.1:8000/sort";
 
   constructor(appData: AppData, router: Router) {
     super(appData, router);
   }
 
-  override async handleResponse(response: Response) { }
+  override async handleResponse(response: Response) {
+    const newData = await response.json() as Array<MultiCampaign>;
+    this.appData.data.set(newData);
+  }
 }
