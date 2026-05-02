@@ -21,6 +21,7 @@ export class SplitDialog extends GenericCampaignDialog {
 
   override async handleResponse(response: Response) {
     const newData = await response.json() as Array<MultiCampaign>;
+    this.appData.deselect.update(val => !val);
     this.appData.data.set(newData);
     this.appData.clearSelection();
   }

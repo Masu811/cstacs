@@ -5,7 +5,7 @@
   <form [formGroup]="formModel" (submit)="submit($event)">
     <h3>Parameters</h3>
     <div formArrayName="items">
-      @for (item of items.controls; track $index; let i = $index) {
+      @for (item of params.controls; track $index; let i = $index) {
         <div [formGroupName]="i">
           <input type="text" formControlName="param"/>
           <label>Target:</label>
@@ -20,7 +20,7 @@
         </div>
       }
     </div>
-    @if (items.controls.length < 20) {
+    @if (params.controls.length < 20) {
       <button type="button" (click)="addItem()">+</button>
     }
     <div class="frame">

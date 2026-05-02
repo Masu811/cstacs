@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Callable, Literal
 from dataclasses import dataclass, asdict
 
 import numpy as np
@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from stacs.coinc import CoincidenceSpectrum
 from stacs.single import SingleSpectrum
-from stacs import MultiCampaign, MeasurementCampaign, DopplerMeasurement
+from stacs import MultiCampaign, MeasurementCampaign, DopplerMeasurement, measurement
 
 from parsers import Parser, parse_parser
 
@@ -354,32 +354,43 @@ def show_singles(idcs: str):
     ])
 
 
-def parse_targets_and_parsers(kwargs: dict[str, Any]) -> None:
-    if "targets" in kwargs:
-        kwargs["targets"] = [
-            "doppler" if target.startswith("D")
-            else "single" if target.startswith("S")
-            else "coinc" if target.startswith("C")
-            else None for target in kwargs["targets"]
-        ]
+@dataclass
+class Param:
+    param: str
+    target: str
+    parser: Parser
 
-    if "parsers" in kwargs:
-        kwargs["parsers"] = [
-            parse_parser(parser) for parser in kwargs["parsers"]
+
+class ParsedParams(TypedDict):
+    params: list[str]
+    targets: list[str | None]
+    parsers: list[Callable]
+
+
+def parse_targets_and_parsers(params: list[Param]) -> ParsedParams:
+    return {
+        "params": [p.param for p in params],
+        "targets": [
+            "doppler" if p.target.startswith("D")
+            else "single" if p.target.startswith("S")
+            else "coinc" if p.target.startswith("C")
+            else None
+            for p in params
+        ],
+        "parsers": [
+            parse_parser(p.parser) for p in params
         ]
+    }
 
 
 @dataclass
 class GenericArgs:
-    params: list[str]
-    targets: list[str]
-    parsers: list[Parser]
+    params: list[Param]
 
 
 @app.post("/print")
 def print_data(selection: Selection, args: GenericArgs):
-    kwargs = asdict(args)
-    parse_targets_and_parsers(kwargs)
+    kwargs = parse_targets_and_parsers(args.params)
     return [
         [
             {key: list(map(str, value)) for key, value in mc_data.items()}
@@ -390,8 +401,7 @@ def print_data(selection: Selection, args: GenericArgs):
 
 @app.post("/parse")
 def parse(selection: Selection, args: GenericArgs):
-    kwargs = asdict(args)
-    parse_targets_and_parsers(kwargs)
+    kwargs = parse_targets_and_parsers(args.params)
     for mult in data:
         mult.parse(**kwargs)
 
@@ -411,15 +421,17 @@ class FilterArgs:
 @app.post("/filter")
 def filter_data(selection: Selection, args: FilterArgs):
     kwargs = {
-        "params": [args.param],
-        "targets": [args.target],
-        "parsers": [asdict(args.parser)],
         "values": args.values if args.byValue else None,
         "min": args.min,
         "max": args.max,
         "negative": args.negative,
     }
-    parse_targets_and_parsers(kwargs)
+
+    kwargs.update(parse_targets_and_parsers([Param(
+        param = args.param,
+        target = args.target,
+        parser = args.parser,
+    )]))
 
     for mult in data:
         mult.filter(**kwargs)
@@ -429,8 +441,7 @@ def filter_data(selection: Selection, args: FilterArgs):
 
 @app.post("/sort")
 def sort(selection: Selection, args: GenericArgs):
-    kwargs = asdict(args)
-    parse_targets_and_parsers(kwargs)
+    kwargs = parse_targets_and_parsers(args.params)
     for mult in data:
         mult.sort(**kwargs)
 
@@ -439,9 +450,102 @@ def sort(selection: Selection, args: GenericArgs):
 
 @app.post("/split")
 def split(selection: Selection, args: GenericArgs):
-    kwargs = asdict(args)
-    parse_targets_and_parsers(kwargs)
+    kwargs = parse_targets_and_parsers(args.params)
     for mult in data:
         mult.split(**kwargs)
 
     return JSONResponse([tree(t) for t in data])
+
+
+@dataclass
+class PlotArgs:
+    x_elements: list[Param]
+    y_elements: list[Param]
+    z_elements: list[Param]
+    errorbars: bool
+    scatter: bool
+    filled: bool
+    label: str
+    label_is_param: bool
+    detname_in_label: bool | None
+
+
+@app.post("/plot")
+def plot(selection: Selection, args: PlotArgs):
+    x_elements = parse_targets_and_parsers(args.x_elements)
+    y_elements = parse_targets_and_parsers(args.y_elements)
+    z_elements = parse_targets_and_parsers(args.z_elements)
+
+    parsed_selection = parse_selection(selection)
+
+    mult_selected = len(parsed_selection["MULT"]) > 0
+
+    if mult_selected:
+        selected_data = data[parsed_selection["MULT"][0][0]]
+    else:
+        selected_data = MultiCampaign(
+            measurements=[
+                data[selected_mc[1]]
+                for selected_mc in parsed_selection["MC"]
+            ]
+        )
+
+    lx = len(x_elements["params"])
+    ly = len(y_elements["params"])
+    lz = len(z_elements["params"])
+
+    n_plots = max(lx, lz, lz)
+
+    if lx != n_plots:
+        x_elements["params"] *= n_plots
+        x_elements["targets"] *= n_plots
+        x_elements["parsers"] *= n_plots
+    if ly != n_plots:
+        y_elements["params"] *= n_plots
+        y_elements["targets"] *= n_plots
+        y_elements["parsers"] *= n_plots
+    if lz != n_plots:
+        z_elements["params"] *= n_plots
+        z_elements["targets"] *= n_plots
+        z_elements["parsers"] *= n_plots
+
+    plot_data = []
+
+    for i in range(n_plots):
+        x_data = selected_data.get(
+            params=x_elements["params"][i],
+            targets=x_elements["targets"][i],
+            parsers=x_elements["parsers"][i],
+            use_pd=False,
+        )
+        y_data = selected_data.get(
+            params=y_elements["params"][i],
+            targets=y_elements["targets"][i],
+            parsers=y_elements["parsers"][i],
+            use_pd=False,
+        )
+        z_data = selected_data.get(
+            params=z_elements["params"][i],
+            targets=z_elements["targets"][i],
+            parsers=z_elements["parsers"][i],
+            use_pd=False,
+        )
+
+        for x, y, z in zip(x_data, y_data, z_data):
+            assert isinstance(x, dict)
+            assert isinstance(y, dict)
+            assert isinstance(z, dict)
+
+            lx = len(x)
+            ly = len(y)
+            lz = len(z)
+
+            for label, subplot in y.items():
+                plot_data.append({
+                    "x": list(x.values())[0].tolist(),
+                    "y": [None if np.isnan(val) else val for val in subplot.tolist()],
+                    "name": label,
+                    "type": "scatter",
+                })
+
+    return plot_data

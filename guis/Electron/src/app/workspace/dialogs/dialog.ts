@@ -8,6 +8,7 @@ import { ParseDialog } from "./dialogs/parse";
 import { FilterDialog } from "./dialogs/filter";
 import { SortDialog } from "./dialogs/sort";
 import { SplitDialog } from "./dialogs/split";
+import { PlotDialog } from "./dialogs/plot";
 
 @Component({
   selector: "custom-dialog",
@@ -30,6 +31,8 @@ export class Dialog {
         return SortDialog;
       case "split":
         return SplitDialog;
+      case "plot":
+        return PlotDialog;
       default:
         return null;
     }

@@ -20,8 +20,7 @@ class ParserDict(TypedDict):
     repr: str
 
 
-def parse_parser(parser_dict: ParserDict) -> Callable:
-    parser = Parser(**parser_dict)
+def parse_parser(parser: Parser) -> Callable:
     match parser.name:
         case "":
             return lambda x: x

@@ -122,4 +122,9 @@ export class Toolbar {
     this.appData.dialogType.set("split");
     this.appData.dialogOpen.set(true);
   }
+
+  plot() {
+    this.appData.dialogType.set("plot");
+    this.appData.dialogOpen.set(true);
+  }
 }

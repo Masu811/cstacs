@@ -19,10 +19,10 @@ export abstract class GenericCampaignDialog {
   private FormBuilder = inject(FormBuilder);
 
   formModel = this.FormBuilder.group({
-    items: this.FormBuilder.array([this.createItem()])
+    params: this.FormBuilder.array([this.newParam()])
   });
 
-  createItem() {
+  private newParam() {
     return this.FormBuilder.group({
       param: "",
       target: "auto",
@@ -34,12 +34,12 @@ export abstract class GenericCampaignDialog {
     } as Param);
   }
 
-  get items() {
-    return this.formModel.get("items") as FormArray;
+  get params() {
+    return this.formModel.get("params") as FormArray;
   }
 
   addItem() {
-    this.items.push(this.createItem());
+    this.params.push(this.newParam());
   }
 
   constructor(public appData: AppData, protected router: Router) { }
@@ -48,24 +48,11 @@ export abstract class GenericCampaignDialog {
     this.appData.dialogOpen.set(false);
   }
 
-  async openParserDialog(i: number) {
+  async openParserDialog(i: number): Promise<void> {
     const parser = await this.appData.openParserDialog();
     if (parser === null) return;
-    const group = this.items.at(i) as FormGroup;
+    const group = this.params.at(i) as FormGroup;
     group.patchValue({ parser: parser });
-  }
-
-  payload() {
-    const items = this.items.controls.map(control => control.value);
-
-    return {
-      selection: parseSelection(this.appData.selection()),
-      args: {
-        params: items.map(item => item.param),
-        targets: items.map(item => item.target),
-        parsers: items.map(item => item.parser),
-      }
-    };
   }
 
   abstract handleResponse(response: Response): Promise<void>;
@@ -73,7 +60,10 @@ export abstract class GenericCampaignDialog {
   async submit(event: Event): Promise<void> {
     event.preventDefault();
 
-    const payload = this.payload();
+    const payload = {
+      selection: parseSelection(this.appData.selection()),
+      args: this.formModel.getRawValue(),
+    };
 
     const response = await fetch(this.endpoint, {
       method: "POST",
