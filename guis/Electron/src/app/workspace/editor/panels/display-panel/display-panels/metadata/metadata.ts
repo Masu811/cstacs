@@ -18,8 +18,7 @@ export class MetadataPanel {
     }
 
     return Object.entries(metadata)
-      .filter(item => item[0] != "__name__")
-      .map(item => `${item[0]}: ${item[1]}`);
+      .filter(item => item[0] != "__name__");
   });
 
   constructor(public appData: AppData) { }

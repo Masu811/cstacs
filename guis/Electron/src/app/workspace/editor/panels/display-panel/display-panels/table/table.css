@@ -1,29 +1,29 @@
 :host {
   overflow: auto;
-}
-
-table {
-  border-collapse: collapse;
+  padding: 10px;
+  padding-top: 0;
 }
 
 td, th {
-  border: 1px solid var(--highlighted-editor-color);
   padding: 0 10px;
   text-align: center;
 }
 
-th {
-  position: sticky;
-  top: 1.8em;
-  background-color: var(--editor-color);
+tr:nth-child(even) {
+  background-color: color-mix(in hsl, var(--editor-color) 80%, gray);
 }
 
-thead {
+th {
+  position: sticky;
+  top: calc(1.5em + 20px);
+  background-color: color-mix(in hsl, var(--editor-color) 80%, gray);
   border-bottom: 2px solid var(--highlighted-editor-color);
 }
 
 h1, h2, h3 {
   position: sticky;
   top: 0;
+  padding: 10px 0;
+  margin: 0;
   background-color: var(--editor-color);
 }

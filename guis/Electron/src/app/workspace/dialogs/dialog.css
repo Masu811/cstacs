@@ -11,7 +11,7 @@ dialog {
   top: 50%;
   transform: translateY(-50%);
   background-color: var(--editor-color);
-  color: lightgray;
+  color: var(--font-color);
   font-family: "IBM Plex Sans", Arial, Helvetica, sans-serif;
   font-size: 0.95em;
   border-radius: 3px;
@@ -35,7 +35,7 @@ div {
 
 input, select, button {
   background-color: var(--highlighted-editor-color);
-  color: lightgray;
+  color: var(--font-color);
   margin: 0 1em;
 }
 
@@ -44,7 +44,7 @@ input[type="number"] {
 }
 
 input::placeholder {
-  color: lightgray;
+  color: var(--font-color);
 }
 
 .add {

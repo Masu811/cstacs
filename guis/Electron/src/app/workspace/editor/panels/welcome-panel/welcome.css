@@ -24,7 +24,7 @@
 
 button {
   background-color: var(--editor-color);
-  color: lightgray;
+  color: var(--font-color);
   border: none;
   border-radius: 3px;
   cursor: pointer;

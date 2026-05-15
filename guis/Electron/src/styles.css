@@ -3,6 +3,7 @@
   --highlighted-editor-color: #60606a;
   --menu-color: #2b2b30;
   --highlighted-menu-color: #45454a;
+  --font-color: lightgray;
 }
 
 @font-face {
@@ -18,7 +19,7 @@
 
 body {
   background-color: var(--editor-color);
-  color: lightgray;
+  color: var(--font-color);
   margin: 0;
   font-family: "IBM Plex Sans", Arial, Helvetica, sans-serif;
   font-size: 0.95em;

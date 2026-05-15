@@ -1,12 +1,22 @@
 :host {
   padding: 10px;
+  padding-top: 0;
+  overflow: auto;
 }
 
-div {
+td {
   white-space: nowrap;
-  margin-top: 10px;
+  text-align: left;
+  align-content: top;
+  padding: 3px 10px;
+  text-align: left;
+}
+
+tr:nth-child(odd) {
+  background-color: color-mix(in hsl, var(--editor-color) 80%, gray);
 }
 
 h1 {
   margin: 0;
+  padding: 10px
 }

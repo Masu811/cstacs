@@ -4,7 +4,7 @@
   </div>
   <form [formGroup]="formModel" (submit)="submit($event)">
     <h3>Parameters</h3>
-    <div formArrayName="items">
+    <div formArrayName="params">
       @for (item of params.controls; track $index; let i = $index) {
         <div [formGroupName]="i">
           <input type="text" formControlName="param"/>

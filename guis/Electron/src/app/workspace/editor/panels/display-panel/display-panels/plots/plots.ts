@@ -25,12 +25,32 @@ export class PlotPanel {
 
     const canvas = this.canvas.nativeElement;
 
+    const styles = getComputedStyle(document.documentElement);
+    const bgColor = styles.getPropertyValue("--editor-color");
+    const fontColor = styles.getPropertyValue("--font-color");
+    const hlColor = styles.getPropertyValue("--highlighted-editor-color");
+
     const layout = {
       autosize: true,
+      paper_bgcolor: bgColor,
+      plot_bgcolor: bgColor,
+      font: {
+        color: fontColor,
+      },
+      xaxis: {
+        showgrid: true,
+        gridcolor: hlColor,
+      },
+      yaxis: {
+        showgrid: true,
+        gridcolor: hlColor,
+      },
     };
 
     const config = {
       responsive: true,
+      editable: true,
+      scrollZoom: true,
       displayModeBar: true,
       modeBarButtonsToAdd: [
         {
