@@ -123,6 +123,29 @@ export class Toolbar {
     this.appData.dialogOpen.set(true);
   }
 
+  async merge() {
+    const payload = parseSelection(this.appData.selection());
+
+    const response = await fetch("http://127.0.0.1:8000/merge", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(response);
+      return;
+    }
+
+    const newData = await response.json() as Array<MultiCampaign>;
+
+    this.appData.deselect.update(val => !val);
+    this.appData.clearSelection();
+    this.appData.data.set(newData);
+  }
+
   plot() {
     this.appData.dialogType.set("plot");
     this.appData.dialogOpen.set(true);

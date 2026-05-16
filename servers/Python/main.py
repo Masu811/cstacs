@@ -418,6 +418,26 @@ class FilterArgs:
     negative: bool
 
 
+def filter_empty_mults():
+    filtered_data = list(filter(lambda mult: len(mult) > 0, data))
+    data.clear()
+    data.extend(filtered_data)
+
+
+def filter_empty_mcs():
+    for mult in data:
+        mult.campaigns = list(filter(lambda mc: len(mc) > 0, mult.campaigns))
+
+
+def filter_empty_ms():
+    for mult in data:
+        for mc in mult:
+            mc.measurements = list(filter(
+                lambda m: len(m.singles) > 0 or len(m.coinc) > 0,
+                mc.measurements
+            ))
+
+
 @app.post("/filter")
 def filter_data(selection: Selection, args: FilterArgs):
     kwargs = {
@@ -435,6 +455,10 @@ def filter_data(selection: Selection, args: FilterArgs):
 
     for mult in data:
         mult.filter(**kwargs)
+
+    filter_empty_ms()
+    filter_empty_mcs()
+    filter_empty_mults()
 
     return JSONResponse([tree(t) for t in data])
 
@@ -483,3 +507,26 @@ def get(selection: Selection, param: Param):
             use_pd=False,
         )]
     )
+
+
+@app.post("/merge")
+def merge(selection: Selection):
+    parsed_selection = parse_selection(selection)
+
+    merged_mc = MultiCampaign(
+        campaigns=[
+            data[mc_idcs[0]].campaigns.pop(mc_idcs[1])
+            for mc_idcs in sorted(parsed_selection["MC"], reverse=True)
+        ]
+    ).merge()
+
+    if len(parsed_selection["MULT"]) == 1:
+        data[parsed_selection["MULT"][0][0]].campaigns.append(merged_mc)
+    elif all(mc_idcs[0] == parsed_selection["MC"][0][0] for mc_idcs in parsed_selection["MC"]):
+        data[parsed_selection["MC"][0][0]].campaigns.append(merged_mc)
+    else:
+        data.append(MultiCampaign(campaigns=[merged_mc]))
+
+    filter_empty_mults()
+
+    return JSONResponse([tree(t) for t in data])
