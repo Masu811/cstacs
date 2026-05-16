@@ -1,3 +1,5 @@
+import { Config, Data, Layout } from "plotly.js-dist-min"
+
 export type DopplerMeasurement = {
   "id": string,
   "name": string | null,
@@ -70,12 +72,19 @@ export function parseSelection(selection: DtypeSelection): ParsedSelection {
   return parsed_selection;
 }
 
-export type PlotTrace = {
-  x: Array<number>,
-  y: Array<number>,
-  name: string,
-  type: string,
+export type PlotTrace = Partial<Data>
+
+export type PlotLayout = Partial<Layout>
+
+export type PlotAxes = {
+  [key: string]: {
+    title: {
+      text: string,
+    },
+  }
 }
+
+export type PlotConfig = Partial<Config>
 
 export type Metadata = {
   __name__: string,

@@ -457,25 +457,9 @@ def split(selection: Selection, args: GenericArgs):
     return JSONResponse([tree(t) for t in data])
 
 
-@dataclass
-class PlotArgs:
-    x_elements: list[Param]
-    y_elements: list[Param]
-    z_elements: list[Param]
-    errorbars: bool
-    scatter: bool
-    filled: bool
-    label: str
-    label_is_param: bool
-    detname_in_label: bool | None
-
-
-@app.post("/plot")
-def plot(selection: Selection, args: PlotArgs):
-    x_elements = parse_targets_and_parsers(args.x_elements)
-    y_elements = parse_targets_and_parsers(args.y_elements)
-    z_elements = parse_targets_and_parsers(args.z_elements)
-
+@app.post("/get")
+def get(selection: Selection, param: Param):
+    kwargs = parse_targets_and_parsers([param])
     parsed_selection = parse_selection(selection)
 
     mult_selected = len(parsed_selection["MULT"]) > 0
@@ -484,68 +468,18 @@ def plot(selection: Selection, args: PlotArgs):
         selected_data = data[parsed_selection["MULT"][0][0]]
     else:
         selected_data = MultiCampaign(
-            measurements=[
-                data[selected_mc[1]]
-                for selected_mc in parsed_selection["MC"]
+            campaigns=[
+                data[mc_idcs[0]][mc_idcs[1]]
+                for mc_idcs in parsed_selection["MC"]
             ]
         )
 
-    lx = len(x_elements["params"])
-    ly = len(y_elements["params"])
-    lz = len(z_elements["params"])
-
-    n_plots = max(lx, lz, lz)
-
-    if lx != n_plots:
-        x_elements["params"] *= n_plots
-        x_elements["targets"] *= n_plots
-        x_elements["parsers"] *= n_plots
-    if ly != n_plots:
-        y_elements["params"] *= n_plots
-        y_elements["targets"] *= n_plots
-        y_elements["parsers"] *= n_plots
-    if lz != n_plots:
-        z_elements["params"] *= n_plots
-        z_elements["targets"] *= n_plots
-        z_elements["parsers"] *= n_plots
-
-    plot_data = []
-
-    for i in range(n_plots):
-        x_data = selected_data.get(
-            params=x_elements["params"][i],
-            targets=x_elements["targets"][i],
-            parsers=x_elements["parsers"][i],
+    return JSONResponse(
+        [{
+            key: [None if np.isnan(val) else val for val in values.tolist()]
+            for key, values in foo.items()
+        } for foo in selected_data.get(
+            **kwargs,
             use_pd=False,
-        )
-        y_data = selected_data.get(
-            params=y_elements["params"][i],
-            targets=y_elements["targets"][i],
-            parsers=y_elements["parsers"][i],
-            use_pd=False,
-        )
-        z_data = selected_data.get(
-            params=z_elements["params"][i],
-            targets=z_elements["targets"][i],
-            parsers=z_elements["parsers"][i],
-            use_pd=False,
-        )
-
-        for x, y, z in zip(x_data, y_data, z_data):
-            assert isinstance(x, dict)
-            assert isinstance(y, dict)
-            assert isinstance(z, dict)
-
-            lx = len(x)
-            ly = len(y)
-            lz = len(z)
-
-            for label, subplot in y.items():
-                plot_data.append({
-                    "x": list(x.values())[0].tolist(),
-                    "y": [None if np.isnan(val) else val for val in subplot.tolist()],
-                    "name": label,
-                    "type": "scatter",
-                })
-
-    return plot_data
+        )]
+    )

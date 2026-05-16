@@ -1,6 +1,6 @@
-import { Component, effect, ElementRef, signal, ViewChild } from "@angular/core";
+import { Component, effect, ElementRef, ViewChild } from "@angular/core";
 import { AppData } from "../../../../../../app_data";
-import { PlotTrace } from "../../../../../../types";
+import { PlotConfig, PlotAxes, PlotTrace, PlotLayout } from "../../../../../../types";
 
 @Component({
   selector: "plots",
@@ -30,24 +30,47 @@ export class PlotPanel {
     const fontColor = styles.getPropertyValue("--font-color");
     const hlColor = styles.getPropertyValue("--highlighted-editor-color");
 
-    const layout = {
+    const n_plots = this.appData.n_plots;
+
+    let n_rows, n_cols;
+
+    if (n_plots < 3) {
+      n_rows = 1;
+      n_cols = n_plots;
+    } else if (n_plots == 3) {
+      n_rows = n_plots;
+      n_cols = 1;
+    } else {
+      n_rows = Math.round(Math.ceil(Math.sqrt(n_plots)));
+      n_cols = Math.round(Math.ceil(n_plots / n_rows));
+    }
+
+    const layout: PlotLayout = {
       autosize: true,
       paper_bgcolor: bgColor,
       plot_bgcolor: bgColor,
       font: {
         color: fontColor,
       },
-      xaxis: {
-        showgrid: true,
-        gridcolor: hlColor,
-      },
-      yaxis: {
-        showgrid: true,
-        gridcolor: hlColor,
-      },
+      grid: {
+        rows: n_rows,
+        columns: n_cols,
+        pattern: "independent",
+      }
     };
 
-    const config = {
+    const axesLayout = this.appData.plotAxes;
+
+    for (const [key, value] of Object.entries(axesLayout)) {
+      //@ts-ignore
+      layout[key] = {
+        ...value,
+        showgrid: true,
+        gridcolor: hlColor,
+      }
+    }
+
+    const config: PlotConfig = {
       responsive: true,
       editable: true,
       scrollZoom: true,
@@ -55,6 +78,7 @@ export class PlotPanel {
       modeBarButtonsToAdd: [
         {
           name: 'Toggle log Y',
+          title: 'Toggle log Y',
           icon: this.plotly.Icons.autoscale,
           click: (gd: any) => {
             const currentType = gd.layout?.yaxis?.type ?? 'linear';

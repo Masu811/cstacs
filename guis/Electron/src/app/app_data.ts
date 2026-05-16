@@ -1,11 +1,13 @@
 import { Injectable, signal, computed } from "@angular/core";
-import { MultiCampaign, Dtype, DtypeToggle, DtypeSelection, PlotTrace, Metadata } from "./types";
+import { MultiCampaign, Dtype, DtypeToggle, DtypeSelection, Metadata, PlotTrace, PlotAxes } from "./types";
 import { Parser } from "./workspace/dialogs/dialogs/parsers/parser-arg-types";
 
 @Injectable({ providedIn: "root" })
 export class AppData {
   data = signal(Array<MultiCampaign>());
   plotData = signal(Array<PlotTrace>());
+  n_plots = 1;
+  plotAxes = {} as PlotAxes;
   metadata = signal<Metadata | null>(null);
   tableData = signal<any>([]);
 
