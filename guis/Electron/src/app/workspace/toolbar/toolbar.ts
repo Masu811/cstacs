@@ -146,6 +146,16 @@ export class Toolbar {
     this.appData.data.set(newData);
   }
 
+  average() {
+    this.appData.dialogType.set("average");
+    this.appData.dialogOpen.set(true);
+  }
+
+  sum() {
+    this.appData.dialogType.set("sum");
+    this.appData.dialogOpen.set(true);
+  }
+
   plot() {
     this.appData.dialogType.set("plot");
     this.appData.dialogOpen.set(true);

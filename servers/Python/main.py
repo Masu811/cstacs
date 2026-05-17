@@ -530,3 +530,46 @@ def merge(selection: Selection):
     filter_empty_mults()
 
     return JSONResponse([tree(t) for t in data])
+
+
+@dataclass
+class AvgArgs:
+    params: list[Param]
+    keep_params: list[Param]
+
+
+@app.post("/average")
+def average(selection: Selection, args: AvgArgs):
+    parsed_selection = parse_selection(selection)
+
+    params = parse_targets_and_parsers(args.params)
+    keep_params = parse_targets_and_parsers(args.keep_params)
+
+    for mc_idcs in parsed_selection["MC"]:
+        data[mc_idcs[0]][mc_idcs[1]].average(
+            **params,
+            keep_params = keep_params["params"],
+            keep_targets = keep_params["targets"],
+            keep_parsers = keep_params["parsers"],
+        )
+
+    return JSONResponse([tree(t) for t in data])
+
+
+@app.post("/sum")
+def sum(selection: Selection, args: AvgArgs):
+    parsed_selection = parse_selection(selection)
+
+    params = parse_targets_and_parsers(args.params)
+    keep_params = parse_targets_and_parsers(args.keep_params)
+
+    for mc_idcs in parsed_selection["MC"]:
+        data[mc_idcs[0]][mc_idcs[1]].sum(
+            **params,
+            keep_params = keep_params["params"],
+            keep_targets = keep_params["targets"],
+            keep_parsers = keep_params["parsers"],
+            analyze=False,
+        )
+
+    return JSONResponse([tree(t) for t in data])

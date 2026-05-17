@@ -29,7 +29,7 @@
             <td (click)="filter()">Filter</td>
             <td (click)="split()">Split</td>
             <td>Derive</td>
-            <td>Average</td>
+            <td (click)="average()">Average</td>
             <td>Normalize</td>
             <td (click)="plot()">Plot</td>
           </tr>
@@ -38,7 +38,7 @@
             <td (click)="sort()">Sort</td>
             <td (click)="merge()">Merge</td>
             <td>Cluster</td>
-            <td>Sum</td>
+            <td (click)="sum()">Sum</td>
             <td>Plot Metadata</td>
             @if (appData.selection()[appData.dtypes.C].size > 1) {
               <td>Ratio Plotter</td>
